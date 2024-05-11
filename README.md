@@ -20,7 +20,7 @@
 
 * C++14 及以上（使用了 C++14 的 std::make_unique 特性）
 
-由于没有库依赖，使用 CMake 等进行构建的步骤很简单（下面以 Linux 系统为例）：
+由于没有库依赖，构建步骤很简单（下面以 Linux + CMake 为例）：
 
 ```text
 mkdir build
@@ -29,23 +29,23 @@ cmake ..
 make
 ```
 
-Windows 平台可以直接利用 IDE 等方式来构建本项目。
+Windows 平台可以直接利用 IDE 等方式来构建本项目：
 
 ## 使用
 
-编译源文件并运行。
+编译源文件并运行：
 
 ```text
 cc -c main.c
 ```
 
-直接运行字节码文件。
+直接运行字节码文件：
 
 ```text
 cc -vm main.bin
 ```
 
-编译源文件并输出人类可阅读形式的字节码文件。
+编译源文件并输出人类可阅读形式的字节码文件：
 
 ```text
 cc -c main.c -obr main.txt
