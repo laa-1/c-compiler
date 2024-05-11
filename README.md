@@ -12,7 +12,7 @@
 
 目前只提供 Windows 平台的二进制可执行文件，更推荐从源代码构建。
 
-你可以在 release 中找到构建好的二进制可执行文件。
+你可以在 release 中找到构建好的二进制可执行文件，[点击下载](https://github.com/laa-1/C-Compiler/releases/download/v1.0.0/cc.exe)。
 
 ### 从源代码构建
 
