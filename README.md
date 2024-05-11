@@ -4,7 +4,7 @@
 
 完全使用 C++ 手写实现，不使用任何编译器构建工具，没有任何除了 C++ 标准库外的依赖。
 
-附带了详细的技术文档介绍本项目的设计和原理，你可以[点击这里](docs/doc.md)找到它。
+附带了详细的技术文档介绍本项目的设计和原理，你可以在[这里](docs/doc.md)找到它。
 
 ## 安装
 
@@ -12,7 +12,7 @@
 
 目前只提供 Windows 平台的二进制可执行文件，更推荐从源代码构建。
 
-你可以在 release 中找到构建好的二进制可执行文件，[点击下载](https://github.com/laa-1/C-Compiler/releases/download/v1.0.0/cc.exe)。
+你可以在 [release](https://github.com/laa-1/C-Compiler/releases) 中找到构建好的二进制可执行文件。
 
 ### 从源代码构建
 
