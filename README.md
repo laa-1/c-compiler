@@ -22,7 +22,7 @@
 
 由于没有库依赖，使用 CMake 等进行构建的步骤很简单（下面以 Linux 系统为例）：
 
-```shell
+```text
 mkdir build
 cd build
 cmake ..
@@ -35,25 +35,25 @@ Windows 平台可以直接利用 IDE 等方式来构建本项目。
 
 编译源文件并运行。
 
-```shell
+```text
 cc -c main.c
 ```
 
 直接运行字节码文件。
 
-```shell
+```text
 cc -vm main.bin
 ```
 
 编译源文件并输出人类可阅读形式的字节码文件。
 
-```shell
+```text
 cc -c main.c -obr main.txt
 ```
 
 使用 `cc -h` 可以获取帮助以查看更多用法。
 
-```shell
+```text
 Usage:
    cc -c <input_file> [options]                 Load the input file as a source file, compile it and perform other operations according to the options
    cc -vm <input_file>                          Load the input file as a bytecode file and run it
