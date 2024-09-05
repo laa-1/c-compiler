@@ -12,7 +12,7 @@
 
 ### 二进制可执行文件
 
-[点击这里](https://github.com/laa-1/C-Compiler/releases) 可以跳转 Releases 找到构建好的 Windows 平台的二进制可执行文件。
+[点击这里](https://github.com/laa-1/c-compiler/releases) 可以跳转 Releases 找到构建好的 Windows 平台的二进制可执行文件。
 
 ### 从源代码构建
 
