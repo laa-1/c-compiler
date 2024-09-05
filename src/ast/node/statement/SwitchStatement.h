@@ -8,7 +8,7 @@ public:
     Expression *expression;
     Statement *body;
 
-    SwitchStatement(Expression *expression, Statement *body);
+    SwitchStatement(int lineNumber, int columnNumber, Expression *expression, Statement *body);
     ~SwitchStatement() override;
     StatementClass getClass() override;
 };

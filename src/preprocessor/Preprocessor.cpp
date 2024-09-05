@@ -2,49 +2,84 @@
 
 Preprocessor::Preprocessor(std::unique_ptr<std::ifstream> file) : file(std::move(file)) {}
 
-char Preprocessor::matchSingleLineComment() {
+void Preprocessor::matchSingleLineComment(char &lastCharacter, int &countLineFeed) {
+    char ch;
+    countLineFeed = 0;
     while (true) {
-        char currentChar = static_cast<char>(file->get());
-        if (currentChar == '\n' || currentChar == EOF) {
-            return currentChar;
+        ch = static_cast<char>(file->get());
+        if (ch == '\n') {
+            countLineFeed++;
+            lastCharacter = ch;
+            return;
+        }
+        if (ch == EOF) {
+            lastCharacter = ch;
+            return;
         }
     }
 }
 
-char Preprocessor::matchMultiLineComment() {
-    char currentChar;
-    char lastChar = '\0';
+void Preprocessor::matchMultiLineComment(char &lastCharacter, int &countLineFeed) {
+    char ch1 = '\0';
+    char ch2;
+    countLineFeed = 0;
     while (true) {
-        currentChar = static_cast<char>(file->get());
-        if (lastChar == '*' && currentChar == '/') {
-            return currentChar;
+        ch2 = static_cast<char>(file->get());
+        if ((ch1 == '*' && ch2 == '/') || ch2 == EOF) {
+            lastCharacter = ch2;
+            return;
         }
-        if (currentChar == EOF) {
-            return currentChar;
+        if (ch2 == '\n') {
+            countLineFeed++;
         }
-        lastChar = currentChar;
+        ch1 = ch2;
     }
 }
 
-std::vector<char> *Preprocessor::process() {
-    auto *charList = new std::vector<char>();
-    char currentChar;
-    char lastChar = '\0';
+void Preprocessor::process() {
+    char ch1 = '\0';
+    char ch2;
+    int countLineFeed;
     while (true) {
-        currentChar = static_cast<char>(file->get());
-        if (lastChar == '/' && currentChar == '/') {
-            lastChar = matchSingleLineComment();
-            charList->pop_back();
-        } else if (lastChar == '/' && currentChar == '*') {
-            lastChar = matchMultiLineComment();
-            charList->pop_back();
-        } else if (currentChar == EOF) {
-            charList->push_back(EOF);
-            return charList;
+        ch2 = static_cast<char>(file->get());
+        if (ch1 == '/' && ch2 == '/') {
+            charLineList->back().pop_back();
+            matchSingleLineComment(ch2, countLineFeed);
+            if (ch2 == EOF) {
+                return;
+            }
+            for (int i = 0; i < countLineFeed; i++) {
+                charLineList->emplace_back();
+            }
+            ch1 = ch2;
+        } else if (ch1 == '/' && ch2 == '*') {
+            charLineList->back().pop_back();
+            matchMultiLineComment(ch2, countLineFeed);
+            if (ch2 == EOF) {
+                return;
+            }
+            for (int i = 0; i < countLineFeed; i++) {
+                charLineList->emplace_back();
+            }
+            ch1 = ch2;
+        } else if (ch2 == EOF) {
+            charLineList->back().push_back(ch2);
+            return;
+        } else if (ch2 == '\n') {
+            charLineList->emplace_back();
+            ch1 = ch2;
         } else {
-            charList->push_back(currentChar);
-            lastChar = currentChar;
+            charLineList->back().push_back(ch2);
+            ch1 = ch2;
         }
     }
+}
+
+std::vector<std::vector<char>> *Preprocessor::process(std::unique_ptr<std::ifstream> file) {
+    auto *preprocessor = new Preprocessor(std::move(file));
+    preprocessor->process();
+    std::vector<std::vector<char>> *charLineList = preprocessor->charLineList;
+    delete preprocessor;
+    return charLineList;
 }
 

@@ -24,6 +24,7 @@ enum class StatementClass {
 
 class Statement : public Node {
 public:
+    Statement(int lineNumber, int columnNumber);
     ~Statement() override = default;
     void accept(Visitor *visitor) override;
     virtual StatementClass getClass() = 0;

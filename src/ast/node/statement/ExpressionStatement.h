@@ -7,7 +7,7 @@ class ExpressionStatement : public Statement {
 public:
     Expression *expression; // 可以为空
 
-    explicit ExpressionStatement(Expression *expression);
+    ExpressionStatement(int lineNumber, int columnNumber, Expression *expression);
     ~ExpressionStatement() override;
     StatementClass getClass() override;
 };

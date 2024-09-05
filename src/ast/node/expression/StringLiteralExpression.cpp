@@ -2,14 +2,10 @@
 
 #include <utility>
 
-StringLiteralExpression::StringLiteralExpression(std::string value) : value(std::move(value)) {}
+StringLiteralExpression::StringLiteralExpression(int lineNumber, int columnNumber, const std::string &value) : Expression(lineNumber, columnNumber), value(value) {}
 
 ExpressionClass StringLiteralExpression::getClass() {
     return ExpressionClass::STRING_LITERAL_EXPRESSION;
-}
-
-Expression *StringLiteralExpression::clone() {
-    return new StringLiteralExpression(value);
 }
 
 

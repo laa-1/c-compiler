@@ -9,8 +9,7 @@ public:
     Type *targetType;
     Expression *operand;
 
-    CastExpression(Type *targetType, Expression *operand);
+    CastExpression(int lineNumber, int columnNumber, Type *targetType, Expression *operand);
     ~CastExpression() override;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

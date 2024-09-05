@@ -12,7 +12,7 @@ public:
     std::string identifier;
     std::vector<Expression *> initialValueList;
 
-    VariableDeclaration(const std::vector<StorageSpecifier> &storageSpecifierList, Type *variableType, std::string identifier, const std::vector<Expression *> &initialValueList);
+    VariableDeclaration(int lineNumber, int columnNumber, const std::vector<StorageSpecifier> &storageSpecifierList, Type *variableType, const std::string &identifier, const std::vector<Expression *> &initialValueList);
     ~VariableDeclaration() override;
     DeclarationClass getClass() override;
 };

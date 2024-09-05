@@ -1,11 +1,9 @@
 #include "CharacterLiteralExpression.h"
 
-CharacterLiteralExpression::CharacterLiteralExpression(char value) : value(value) {}
+CharacterLiteralExpression::CharacterLiteralExpression(int lineNumber, int columnNumber, char value) : Expression(lineNumber, columnNumber), value(value) {}
 
 ExpressionClass CharacterLiteralExpression::getClass() {
     return ExpressionClass::CHAR_LITERAL_EXPRESSION;
 }
 
-Expression *CharacterLiteralExpression::clone() {
-    return new CharacterLiteralExpression(value);
-}
+

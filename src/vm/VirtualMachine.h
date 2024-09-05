@@ -12,14 +12,14 @@
  * 大小为64比特。
  * 利用union实现比特层面的重解释转换。
  */
-union OperandStackElem {
+union OperandStackUnit {
     std::int64_t i64;
     std::uint64_t u64 = 0;
     double f64;
 
-    explicit OperandStackElem(std::int64_t i64) : i64(i64) {}
-    explicit OperandStackElem(std::uint64_t u64) : u64(u64) {}
-    explicit OperandStackElem(double f64) : f64(f64) {}
+    explicit OperandStackUnit(std::int64_t i64) : i64(i64) {}
+    explicit OperandStackUnit(std::uint64_t u64) : u64(u64) {}
+    explicit OperandStackUnit(double f64) : f64(f64) {}
 };
 
 /**
@@ -34,15 +34,14 @@ private:
     std::vector<std::uint8_t> dataArea;
     std::uint64_t pc; // 下一条指令的地址
     std::uint64_t bp; // 基地址
-    std::stack<OperandStackElem> operandStack;
+    std::stack<OperandStackUnit> operandStack;
     std::stack<std::uint64_t> callAddressStack;
     std::stack<std::uint64_t> returnAddressStack;
 
 private:
-    Instruction fetchInstruction();
-    void execute(const Instruction &instruction);
-
-public:
     explicit VirtualMachine(Bytecode *bytecode);
     void run();
+
+public:
+    static void run(Bytecode *bytecode);
 };

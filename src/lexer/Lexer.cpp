@@ -1,83 +1,58 @@
 #include "Lexer.h"
 
 #include <string>
-#include <map>
 #include <set>
-#include "../logger/Logger.h"
+#include "../error/ErrorHandler.h"
 
-bool isDigit(const char &ch) {
-    return ch >= 48 && ch <= 57;
+Lexer::Lexer(std::vector<std::vector<char>> *charLineList) : charLineList(charLineList) {}
+
+inline bool Lexer::characterIsDigit() const {
+    return character >= 48 && character <= 57;
 }
 
-bool isDigitLetterUnderscore(const char &ch) {
-    return (ch >= 48 && ch <= 57) || (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122) || ch == 95;
+inline bool Lexer::characterDigitOrLetterOrUnderscore() const {
+    return (character >= 48 && character <= 57) || (character >= 65 && character <= 90) || (character >= 97 && character <= 122) || character == 95;
 }
 
-bool isKeyword(const std::string &str) {
-    static std::set<std::string> keywordSet = {"auto", "break", "case", "char", "const", "continue", "default", "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "int", "long", "register", "return", "short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void", "volatile", "while"};
-    return keywordSet.find(str) != keywordSet.end();
+inline bool Lexer::bufferIsKeyword() {
+    return keywordSet.contains(buffer);
 }
 
-TokenId keywordToTokenId(const std::string &keyword) {
-    std::map<std::string, TokenId> keywordTokenIdMap = {{"auto",     TokenId::KEYWORD_AUTO},
-                                                        {"break",    TokenId::KEYWORD_BREAK},
-                                                        {"case",     TokenId::KEYWORD_CASE},
-                                                        {"char",     TokenId::KEYWORD_CHAR},
-                                                        {"const",    TokenId::KEYWORD_CONST},
-                                                        {"continue", TokenId::KEYWORD_CONTINUE},
-                                                        {"default",  TokenId::KEYWORD_DEFAULT},
-                                                        {"do",       TokenId::KEYWORD_DO},
-                                                        {"double",   TokenId::KEYWORD_DOUBLE},
-                                                        {"else",     TokenId::KEYWORD_ELSE},
-                                                        {"enum",     TokenId::KEYWORD_ENUM},
-                                                        {"extern",   TokenId::KEYWORD_EXTERN},
-                                                        {"float",    TokenId::KEYWORD_FLOAT},
-                                                        {"for",      TokenId::KEYWORD_FOR},
-                                                        {"goto",     TokenId::KEYWORD_GOTO},
-                                                        {"if",       TokenId::KEYWORD_IF},
-                                                        {"inline",   TokenId::KEYWORD_INLINE},
-                                                        {"int",      TokenId::KEYWORD_INT},
-                                                        {"long",     TokenId::KEYWORD_LONG},
-                                                        {"register", TokenId::KEYWORD_REGISTER},
-                                                        {"restrict", TokenId::KEYWORD_RESTRICT},
-                                                        {"return",   TokenId::KEYWORD_RETURN},
-                                                        {"short",    TokenId::KEYWORD_SHORT},
-                                                        {"signed",   TokenId::KEYWORD_SIGNED},
-                                                        {"sizeof",   TokenId::KEYWORD_SIZEOF},
-                                                        {"static",   TokenId::KEYWORD_STATIC},
-                                                        {"struct",   TokenId::KEYWORD_STRUCT},
-                                                        {"switch",   TokenId::KEYWORD_SWITCH},
-                                                        {"typedef",  TokenId::KEYWORD_TYPEDEF},
-                                                        {"union",    TokenId::KEYWORD_UNION},
-                                                        {"unsigned", TokenId::KEYWORD_UNSIGNED},
-                                                        {"void",     TokenId::KEYWORD_VOID},
-                                                        {"volatile", TokenId::KEYWORD_VOLATILE},
-                                                        {"while",    TokenId::KEYWORD_WHILE}};
-    return keywordTokenIdMap[keyword];
+inline void Lexer::nextCharacter() {
+    if ((*charLineList)[lineIndex].empty() || columnIndex == (*charLineList)[lineIndex].size() - 1) {
+        lineIndex++;
+        columnIndex = 0;
+        while ((*charLineList)[lineIndex].empty()) {
+            lineIndex++;
+        }
+    } else {
+        columnIndex++;
+    }
+    character = (*charLineList)[lineIndex][columnIndex];
 }
 
-Lexer::Lexer(std::vector<char> *charList) : charList(charList) {}
-
-char Lexer::getNextChar() {
-    return (*charList)[currentIndex++];
+inline void Lexer::rollbackCharacter() {
+    if (columnIndex == 0) {
+        lineIndex--;
+        columnIndex = static_cast<int>((*charLineList)[lineIndex].size()) - 1;
+    } else {
+        columnIndex--;
+    }
+    character = (*charLineList)[lineIndex][columnIndex];
 }
 
-void Lexer::rollbackLastChar() {
-    currentIndex--;
-}
-
-Token Lexer::analysisNextToken(bool &ignore) {
-    char ch;
-    std::string buffer;
-    ch = getNextChar();
-    switch (ch) {
+Token Lexer::analysisNextToken(bool &needIgnore) {
+    buffer = "";
+    nextCharacter();
+    int lineNumber = lineIndex + 1;
+    int columnNumber = columnIndex + 1;
+    switch (character) {
         case EOF:
-            return {TokenId::SPECIAL_EOF, ""};
+            return {TokenId::SPECIAL_EOF, "", lineNumber, columnNumber};
         case ' ':
-        case '\n':
         case '\r':
         case '\t':
-            ignore = true;
+            needIgnore = true;
             return {};
         case 'a':
         case 'b':
@@ -134,41 +109,40 @@ Token Lexer::analysisNextToken(bool &ignore) {
         case '_':
             // 匹配标识符和关键字
             do {
-                buffer += ch;
-                ch = getNextChar();
-            } while (isDigitLetterUnderscore(ch));
-            rollbackLastChar();
-            if (isKeyword(buffer)) {
+                buffer += character;
+                nextCharacter();
+            } while (characterDigitOrLetterOrUnderscore());
+            rollbackCharacter();
+            if (bufferIsKeyword()) {
                 // 关键字
-                return {keywordToTokenId(buffer), buffer};
+                return {keywordTokenIdMap[buffer], buffer, lineNumber, columnNumber};
             } else {
                 // 标识符
-                return {TokenId::IDENTIFIER, buffer};
+                return {TokenId::IDENTIFIER, buffer, lineNumber, columnNumber};
             }
         case '0':
             // 匹配0开头的数值常量
-            buffer += ch;
-            ch = getNextChar();
-            if (ch == '.') {
+            buffer += character;
+            nextCharacter();
+            if (character == '.') {
                 // 匹配浮点数常量
-                buffer += ch;
-                ch = getNextChar();
-                if (!isDigit(ch)) {
-                    rollbackLastChar();
-                    haveError = true;
-                    Logger::error("numerical constant cannot end with a dot");
+                buffer += character;
+                nextCharacter();
+                if (!characterIsDigit()) {
+                    rollbackCharacter();
+                    ErrorHandler::error(lineNumber, columnNumber, "numerical constant cannot end with a dot");
                     return {};
                 }
-                while (isDigit(ch)) {
-                    buffer += ch;
-                    ch = getNextChar();
+                while (characterIsDigit()) {
+                    buffer += character;
+                    nextCharacter();
                 }
-                rollbackLastChar();
-                return {TokenId::LITERAL_FLOATING_POINT, buffer};
+                rollbackCharacter();
+                return {TokenId::LITERAL_FLOATING_POINT, buffer, lineNumber, columnNumber};
             } else {
                 // 数值0
-                rollbackLastChar();
-                return {TokenId::LITERAL_INTEGER, buffer};
+                rollbackCharacter();
+                return {TokenId::LITERAL_INTEGER, buffer, lineNumber, columnNumber};
             }
         case '1':
         case '2':
@@ -180,39 +154,38 @@ Token Lexer::analysisNextToken(bool &ignore) {
         case '8':
         case '9':
             // 匹配整形常量
-            while (isDigit(ch)) {
-                buffer += ch;
-                ch = getNextChar();
+            while (characterIsDigit()) {
+                buffer += character;
+                nextCharacter();
             }
-            if (ch == '.') {
+            if (character == '.') {
                 // 匹配浮点数常量
-                buffer += ch;
-                ch = getNextChar();
-                if (!isDigit(ch)) {
-                    rollbackLastChar();
-                    haveError = true;
-                    Logger::error("numerical constant cannot end with a dot");
+                buffer += character;
+                nextCharacter();
+                if (!characterIsDigit()) {
+                    rollbackCharacter();
+                    ErrorHandler::error(lineNumber, columnNumber, "numerical constant cannot end with a dot");
                     return {};
                 } else {
-                    while (isDigit(ch)) {
-                        buffer += ch;
-                        ch = getNextChar();
+                    while (characterIsDigit()) {
+                        buffer += character;
+                        nextCharacter();
                     }
-                    rollbackLastChar();
-                    return {TokenId::LITERAL_FLOATING_POINT, buffer};
+                    rollbackCharacter();
+                    return {TokenId::LITERAL_FLOATING_POINT, buffer, lineNumber, columnNumber};
                 }
             } else {
                 // 整形常量
-                rollbackLastChar();
-                return {TokenId::LITERAL_INTEGER, buffer};
+                rollbackCharacter();
+                return {TokenId::LITERAL_INTEGER, buffer, lineNumber, columnNumber};
             }
         case '\'':
             // 匹配字符常量
-            ch = getNextChar();
-            if (ch == '\\') {
+            nextCharacter();
+            if (character == '\\') {
                 // 匹配转义字符
-                ch = getNextChar();
-                switch (ch) {
+                nextCharacter();
+                switch (character) {
                     case 'a':
                         buffer += '\a';
                         break;
@@ -238,32 +211,30 @@ Token Lexer::analysisNextToken(bool &ignore) {
                         buffer += '\0';
                         break;
                     default:
-                        buffer += ch;
+                        buffer += character;
                         break;
                 }
-            } else if (ch == '\'') {
-                haveError = true;
-                Logger::error("character constants are not allowed to have more than one character");
+            } else if (character == '\'') {
+                ErrorHandler::error(lineNumber, columnNumber, "character constants are not allowed to have more than one character");
                 return {};
             } else {
-                buffer += ch;
+                buffer += character;
             }
-            ch = getNextChar();
-            if (ch != '\'') {
-                rollbackLastChar();
-                haveError = true;
-                Logger::error("character constants are not allowed to have more than one character");
+            nextCharacter();
+            if (character != '\'') {
+                rollbackCharacter();
+                ErrorHandler::error(lineNumber, columnNumber, "character constants are not allowed to have more than one character");
                 return {};
             }
             return {TokenId::LITERAL_CHARACTER, buffer};
         case '"':
             // 匹配字符串字面量
             while (true) {
-                ch = getNextChar();
-                if (ch == '\\') {
+                nextCharacter();
+                if (character == '\\') {
                     // 匹配转义字符
-                    ch = getNextChar();
-                    switch (ch) {
+                    nextCharacter();
+                    switch (character) {
                         case 'a':
                             buffer += '\a';
                             break;
@@ -289,199 +260,191 @@ Token Lexer::analysisNextToken(bool &ignore) {
                             buffer += '\0';
                             break;
                         default:
-                            buffer += ch;
+                            buffer += character;
                             break;
                     }
-                } else if (ch == '"') {
-                    return {TokenId::LITERAL_STRING, buffer};
-                } else if (ch == EOF) {
-                    haveError = true;
-                    Logger::error("string constants cannot be used without the right double quote");
+                } else if (character == '"') {
+                    return {TokenId::LITERAL_STRING, buffer, lineNumber, columnNumber};
+                } else if (character == EOF) {
+                    ErrorHandler::error(lineNumber, columnNumber, "string constants cannot be used without the right double quote");
                     return {};
                 } else {
-                    buffer += ch;
+                    buffer += character;
                 }
             }
         case '+':
-            ch = getNextChar();
-            if (ch == '+') {
-                return {TokenId::PUNCTUATOR_INCREMENT, "++"};
-            } else if (ch == '=') {
-                return {TokenId::PUNCTUATOR_ADD_ASSIGN, "+="};
+            nextCharacter();
+            if (character == '+') {
+                return {TokenId::PUNCTUATOR_INCREMENT, "++", lineNumber, columnNumber};
+            } else if (character == '=') {
+                return {TokenId::PUNCTUATOR_ADD_ASSIGN, "+=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_ADD, "+"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_ADD, "+", lineNumber, columnNumber};
             }
         case '-':
-            ch = getNextChar();
-            if (ch == '-') {
-                return {TokenId::PUNCTUATOR_DECREMENT, "--"};
-            } else if (ch == '=') {
-                return {TokenId::PUNCTUATOR_SUB_ASSIGN, "-="};
-            } else if (ch == '>') {
-                return {TokenId::PUNCTUATOR_POINT_TO, "->"};
+            nextCharacter();
+            if (character == '-') {
+                return {TokenId::PUNCTUATOR_DECREMENT, "--", lineNumber, columnNumber};
+            } else if (character == '=') {
+                return {TokenId::PUNCTUATOR_SUB_ASSIGN, "-=", lineNumber, columnNumber};
+            } else if (character == '>') {
+                return {TokenId::PUNCTUATOR_POINT_TO, "->", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_SUB, "-"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_SUB, "-", lineNumber, columnNumber};
             }
         case '*':
-            ch = getNextChar();
-            if (ch == '=') {
-                return {TokenId::PUNCTUATOR_MUL_ASSIGN, "*="};
+            nextCharacter();
+            if (character == '=') {
+                return {TokenId::PUNCTUATOR_MUL_ASSIGN, "*=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_MUL, "*"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_MUL, "*", lineNumber, columnNumber};
             }
         case '/':
-            ch = getNextChar();
-            if (ch == '=') {
-                return {TokenId::PUNCTUATOR_DIV_ASSIGN, "/="};
+            nextCharacter();
+            if (character == '=') {
+                return {TokenId::PUNCTUATOR_DIV_ASSIGN, "/=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_DIV, "/"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_DIV, "/", lineNumber, columnNumber};
             }
         case '%':
-            ch = getNextChar();
-            if (ch == '=') {
-                return {TokenId::PUNCTUATOR_MOD_ASSIGN, "%="};
+            nextCharacter();
+            if (character == '=') {
+                return {TokenId::PUNCTUATOR_MOD_ASSIGN, "%=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_MOD, "%"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_MOD, "%", lineNumber, columnNumber};
             }
         case '=':
-            ch = getNextChar();
-            if (ch == '=') {
-                return {TokenId::PUNCTUATOR_EQUAL, "=="};
+            nextCharacter();
+            if (character == '=') {
+                return {TokenId::PUNCTUATOR_EQUAL, "==", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_ASSIGN, "="};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_ASSIGN, "=", lineNumber, columnNumber};
             }
         case '>':
-            ch = getNextChar();
-            if (ch == '>') {
-                ch = getNextChar();
-                if (ch == '=') {
-                    return {TokenId::PUNCTUATOR_RIGHT_SHIFT_ASSIGN, ">>="};
+            nextCharacter();
+            if (character == '>') {
+                nextCharacter();
+                if (character == '=') {
+                    return {TokenId::PUNCTUATOR_RIGHT_SHIFT_ASSIGN, ">>=", lineNumber, columnNumber};
                 } else {
-                    rollbackLastChar();
-                    return {TokenId::PUNCTUATOR_RIGHT_SHIFT, ">>"};
+                    rollbackCharacter();
+                    return {TokenId::PUNCTUATOR_RIGHT_SHIFT, ">>", lineNumber, columnNumber};
                 }
-            } else if (ch == '=') {
-                return {TokenId::PUNCTUATOR_GREATER_EQUAL, ">="};
+            } else if (character == '=') {
+                return {TokenId::PUNCTUATOR_GREATER_EQUAL, ">=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_GREATER, ">"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_GREATER, ">", lineNumber, columnNumber};
             }
         case '<':
-            ch = getNextChar();
-            if (ch == '<') {
-                ch = getNextChar();
-                if (ch == '=') {
-                    return {TokenId::PUNCTUATOR_LEFT_SHIFT_ASSIGN, "<<="};
+            nextCharacter();
+            if (character == '<') {
+                nextCharacter();
+                if (character == '=') {
+                    return {TokenId::PUNCTUATOR_LEFT_SHIFT_ASSIGN, "<<=", lineNumber, columnNumber};
                 } else {
-                    rollbackLastChar();
-                    return {TokenId::PUNCTUATOR_LEFT_SHIFT, "<<"};
+                    rollbackCharacter();
+                    return {TokenId::PUNCTUATOR_LEFT_SHIFT, "<<", lineNumber, columnNumber};
                 }
-            } else if (ch == '=') {
-                return {TokenId::PUNCTUATOR_LESS_EQUAL, "<="};
+            } else if (character == '=') {
+                return {TokenId::PUNCTUATOR_LESS_EQUAL, "<=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_LESS, "<"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_LESS, "<", lineNumber, columnNumber};
             }
         case '!':
-            ch = getNextChar();
-            if (ch == '=') {
-                return {TokenId::PUNCTUATOR_LOGICAL_NOT_EQUAL, "!="};
+            nextCharacter();
+            if (character == '=') {
+                return {TokenId::PUNCTUATOR_LOGICAL_NOT_EQUAL, "!=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_LOGICAL_NOT, "!"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_LOGICAL_NOT, "!", lineNumber, columnNumber};
             }
         case '&':
-            ch = getNextChar();
-            if (ch == '&') {
-                return {TokenId::PUNCTUATOR_LOGICAL_AND, "&&"};
-            } else if (ch == '=') {
-                return {TokenId::PUNCTUATOR_BITWISE_AND_ASSIGN, "&="};
+            nextCharacter();
+            if (character == '&') {
+                return {TokenId::PUNCTUATOR_LOGICAL_AND, "&&", lineNumber, columnNumber};
+            } else if (character == '=') {
+                return {TokenId::PUNCTUATOR_BITWISE_AND_ASSIGN, "&=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_BITWISE_AND, "&"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_BITWISE_AND, "&", lineNumber, columnNumber};
             }
         case '|':
-            ch = getNextChar();
-            if (ch == '|') {
-                return {TokenId::PUNCTUATOR_LOGICAL_OR, "||"};
-            } else if (ch == '=') {
-                return {TokenId::PUNCTUATOR_BITWISE_OR_ASSIGN, "|="};
+            nextCharacter();
+            if (character == '|') {
+                return {TokenId::PUNCTUATOR_LOGICAL_OR, "||", lineNumber, columnNumber};
+            } else if (character == '=') {
+                return {TokenId::PUNCTUATOR_BITWISE_OR_ASSIGN, "|=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_BITWISE_OR, "|"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_BITWISE_OR, "|", lineNumber, columnNumber};
             }
         case '^':
-            ch = getNextChar();
-            if (ch == '=') {
-                return {TokenId::PUNCTUATOR_EXCLUSIVE_OR_ASSIGN, "^="};
+            nextCharacter();
+            if (character == '=') {
+                return {TokenId::PUNCTUATOR_EXCLUSIVE_OR_ASSIGN, "^=", lineNumber, columnNumber};
             } else {
-                rollbackLastChar();
-                return {TokenId::PUNCTUATOR_EXCLUSIVE_OR, "^"};
+                rollbackCharacter();
+                return {TokenId::PUNCTUATOR_EXCLUSIVE_OR, "^", lineNumber, columnNumber};
             }
         case '~':
-            return {TokenId::PUNCTUATOR_BITWISE_NOT, "~"};
+            return {TokenId::PUNCTUATOR_BITWISE_NOT, "~", lineNumber, columnNumber};
         case '?':
-            return {TokenId::PUNCTUATOR_QUESTION, "?"};
+            return {TokenId::PUNCTUATOR_QUESTION, "?", lineNumber, columnNumber};
         case ':':
-            return {TokenId::PUNCTUATOR_COLON, ":"};
+            return {TokenId::PUNCTUATOR_COLON, ":", lineNumber, columnNumber};
         case '(':
-            return {TokenId::PUNCTUATOR_LEFT_PARENTHESES, "("};
+            return {TokenId::PUNCTUATOR_LEFT_PARENTHESES, "(", lineNumber, columnNumber};
         case ')':
-            return {TokenId::PUNCTUATOR_RIGHT_PARENTHESES, ")"};
+            return {TokenId::PUNCTUATOR_RIGHT_PARENTHESES, ")", lineNumber, columnNumber};
         case '[':
-            return {TokenId::PUNCTUATOR_LEFT_SQUARE_BRACKETS, "["};
+            return {TokenId::PUNCTUATOR_LEFT_SQUARE_BRACKETS, "[", lineNumber, columnNumber};
         case ']':
-            return {TokenId::PUNCTUATOR_RIGHT_SQUARE_BRACKETS, "]"};
+            return {TokenId::PUNCTUATOR_RIGHT_SQUARE_BRACKETS, "]", lineNumber, columnNumber};
         case '{':
-            return {TokenId::PUNCTUATOR_LEFT_CURLY_BRACES, "{"};
+            return {TokenId::PUNCTUATOR_LEFT_CURLY_BRACES, "{", lineNumber, columnNumber};
         case '}':
-            return {TokenId::PUNCTUATOR_RIGHT_CURLY_BRACES, "}"};
+            return {TokenId::PUNCTUATOR_RIGHT_CURLY_BRACES, "}", lineNumber, columnNumber};
         case ',':
-            return {TokenId::PUNCTUATOR_COMMA, ","};
+            return {TokenId::PUNCTUATOR_COMMA, ",", lineNumber, columnNumber};
         case ';':
-            return {TokenId::PUNCTUATOR_SEMICOLON, ";"};
+            return {TokenId::PUNCTUATOR_SEMICOLON, ";", lineNumber, columnNumber};
         case '.':
-            return {TokenId::PUNCTUATOR_DOT, "."};
-        case '#':
-            // 匹配预处理输出的行
-            do {
-                ch = getNextChar();
-            } while (ch != '\n');
-            ignore = true;
-            return {};
+            return {TokenId::PUNCTUATOR_DOT, ".", lineNumber, columnNumber};
         default:
-            haveError = true;
-            Logger::error("invalid character of `" + std::string(1, ch) + "`");
-            rollbackLastChar();
+            ErrorHandler::error(lineNumber, columnNumber, "invalid character of `" + std::string(1, character) + "`");
+            rollbackCharacter();
             return {};
     }
 }
 
-std::vector<Token> *Lexer::analysis() {
-    auto *tokenList = new std::vector<Token>();
+void Lexer::analysis() {
     while (true) {
-        bool ignore = false;
-        Token token = analysisNextToken(ignore);
-        if (haveError) {
-            return {};
+        bool needIgnore = false;
+        Token token = analysisNextToken(needIgnore);
+        if (ErrorHandler::getStatus()) {
+            return;
         }
-        if (!ignore) {
+        if (!needIgnore) {
             tokenList->push_back(token);
             if (token.id == TokenId::SPECIAL_EOF) {
-                return tokenList;
+                return;
             }
         }
     }
 }
 
-bool Lexer::isHaveError() const {
-    return haveError;
+std::vector<Token> *Lexer::analysis(std::vector<std::vector<char>> *charLineList) {
+    std::unique_ptr<Lexer> lexer = std::unique_ptr<Lexer>(new Lexer(charLineList));
+    lexer->analysis();
+    return lexer->tokenList;
 }
 
 

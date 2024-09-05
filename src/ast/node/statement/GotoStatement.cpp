@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-GotoStatement::GotoStatement(std::string identifier) : identifier(std::move(identifier)) {}
+GotoStatement::GotoStatement(int lineNumber, int columnNumber, const std::string &identifier) : Statement(lineNumber, columnNumber), identifier(identifier) {}
 
 StatementClass GotoStatement::getClass() {
     return StatementClass::GOTO_STATEMENT;

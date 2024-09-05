@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-ReturnStatement::ReturnStatement(Expression *value) : value(value) {}
+ReturnStatement::ReturnStatement(int lineNumber, int columnNumber, Expression *value) : Statement(lineNumber, columnNumber), value(value) {}
 
 ReturnStatement::~ReturnStatement() {
     delete value;

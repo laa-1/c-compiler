@@ -11,8 +11,7 @@ public:
     Expression *functionAddress;
     std::vector<Expression *> argumentList;
 
-    CallExpression(Expression *functionAddress, const std::vector<Expression *> &argumentList);
+    CallExpression(int lineNumber, int columnNumber, Expression *functionAddress, const std::vector<Expression *> &argumentList);
     ~CallExpression() override;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

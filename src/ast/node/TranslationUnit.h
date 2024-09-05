@@ -14,7 +14,7 @@ class TranslationUnit : public Node {
 public:
     std::vector<Declaration *> declarationList;
 
-    explicit TranslationUnit(const std::vector<Declaration *> &declarationList);
+    TranslationUnit(int lineNumber, int columnNumber, const std::vector<Declaration *> &declarationList);
     ~TranslationUnit() override;
     void accept(Visitor *visitor) override;
 };

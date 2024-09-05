@@ -7,7 +7,13 @@
 #include "PointerSymbol.h"
 #include "ScalarSymbol.h"
 
-int getTypeMemoryUse(Type *type) {
+SymbolTable::SymbolTable(Scope *rootScope) : rootScope(rootScope) {}
+
+SymbolTable::~SymbolTable() {
+    delete rootScope;
+}
+
+int SymbolTable::getTypeMemoryUse(Type *type) {
     switch (type->getClass()) {
         case TypeClass::ARRAY_TYPE:
             return getTypeMemoryUse(((ArrayType *) type)->elemType) * ((ArrayType *) type)->size;
@@ -40,53 +46,47 @@ int getTypeMemoryUse(Type *type) {
     assert(false);
 }
 
-void calculateScopeAddress(Scope *scope, std::uint64_t &currentAddress) {
-    std::uint64_t startAddress = currentAddress;
+void SymbolTable::calculateScopeAddress(Scope *scope, std::uint64_t &current) {
+    std::uint64_t start = current;
     for (const auto &pair : scope->map) {
         Symbol *symbol = pair.second;
         switch (symbol->getClass()) {
             case SymbolClass::SCALAR_SYMBOL:
-                ((ScalarSymbol *) symbol)->address = currentAddress;
-                currentAddress += getTypeMemoryUse(((ScalarSymbol *) symbol)->type);
+                ((ScalarSymbol *) symbol)->address = current;
+                current += getTypeMemoryUse(((ScalarSymbol *) symbol)->type);
                 break;
             case SymbolClass::POINTER_SYMBOL:
-                ((PointerSymbol *) symbol)->address = currentAddress;
-                currentAddress += getTypeMemoryUse(((PointerSymbol *) symbol)->type);
+                ((PointerSymbol *) symbol)->address = current;
+                current += getTypeMemoryUse(((PointerSymbol *) symbol)->type);
                 break;
             case SymbolClass::ARRAY_SYMBOL:
-                ((ArraySymbol *) symbol)->address = currentAddress;
-                currentAddress += getTypeMemoryUse(((ArraySymbol *) symbol)->type);
+                ((ArraySymbol *) symbol)->address = current;
+                current += getTypeMemoryUse(((ArraySymbol *) symbol)->type);
                 break;
             case SymbolClass::FUNCTION_SYMBOL:
             case SymbolClass::STATEMENT_SYMBOL:
                 break;
         }
     }
-    scope->memoryUseSelf = currentAddress - startAddress;
+    scope->memoryUseSelf = current - start;
 }
 
-void calculateScopeAddressRecursively(Scope *scope, std::uint64_t &currentAddress) {
-    std::uint64_t startAddress = currentAddress;
-    calculateScopeAddress(scope, currentAddress);
-    scope->memoryUseRecursive = currentAddress - startAddress;
-    std::uint64_t childStartAddress = currentAddress;
+void SymbolTable::calculateScopeAddressRecursively(Scope *scope, std::uint64_t &current) {
+    std::uint64_t start = current;
+    calculateScopeAddress(scope, current);
+    scope->memoryUseRecursive = current - start;
+    std::uint64_t childStartAddress = current;
     for (auto childScope : scope->childList) {
-        currentAddress = childStartAddress; // 并列作用域的内存是可复用的
-        calculateScopeAddressRecursively(childScope, currentAddress);
-        if (currentAddress - startAddress > scope->memoryUseRecursive) {
-            scope->memoryUseRecursive = currentAddress - startAddress;
+        current = childStartAddress; // 并列作用域的内存是可复用的
+        calculateScopeAddressRecursively(childScope, current);
+        if (current - start > scope->memoryUseRecursive) {
+            scope->memoryUseRecursive = current - start;
         }
     }
 }
 
-SymbolTable::SymbolTable(Scope *rootScope) : rootScope(rootScope) {}
-
-SymbolTable::~SymbolTable() {
-    delete rootScope;
-}
-
-bool SymbolTable::checkGlobal(const std::string &identifier) {
-    return (*rootScope)[identifier] != nullptr;
+SymbolTableIterator *SymbolTable::createIterator() {
+    return new SymbolTableIterator(rootScope);
 }
 
 void SymbolTable::calculateAddress(std::uint64_t start) {
@@ -97,14 +97,14 @@ void SymbolTable::calculateAddress(std::uint64_t start) {
         std::uint64_t functionStartAddress = 0;
         calculateScopeAddressRecursively(functionScope, functionStartAddress);
     }
-    memoryUseRoot = rootScope->memoryUseSelf;
+    memoryUseRootScope = rootScope->memoryUseSelf;
 }
 
-SymbolTableIterator *SymbolTable::createIterator() {
-    return new SymbolTableIterator(rootScope);
+bool SymbolTable::checkGlobal(const std::string &identifier) {
+    return (*rootScope)[identifier] != nullptr;
 }
 
-std::map<std::uint64_t, std::uint64_t> SymbolTable::createMemoryUseMap() {
+std::map<std::uint64_t, std::uint64_t> SymbolTable::createFunctionMemoryUseMap() {
     std::map<std::uint64_t, std::uint64_t> memoryUseMap;
     for (auto functionScope : rootScope->childList) {
         memoryUseMap[((FunctionSymbol *) (*rootScope)[functionScope->name])->address] = functionScope->memoryUseRecursive;
@@ -116,6 +116,6 @@ std::uint64_t SymbolTable::getStartAddress() const {
     return startAddress;
 }
 
-std::uint64_t SymbolTable::getMemoryUseRoot() const {
-    return memoryUseRoot;
+std::uint64_t SymbolTable::getMemoryUseRootScope() const {
+    return memoryUseRootScope;
 }

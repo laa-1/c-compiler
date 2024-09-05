@@ -7,8 +7,7 @@ class StringLiteralExpression : public Expression {
 public:
     std::string value;
 
-    explicit StringLiteralExpression(std::string value);
+    StringLiteralExpression(int lineNumber, int columnNumber, const std::string &value);
     ~StringLiteralExpression() override = default;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

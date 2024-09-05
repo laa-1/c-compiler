@@ -2,7 +2,7 @@
 #include <iostream>
 #include <utility>
 
-FunctionDefinition::FunctionDefinition(const std::vector<FunctionSpecifier> &functionSpecifierList, Type *functionType, std::string identifier, const std::vector<Declaration *> &parameterDeclarationList, Statement *body) : functionSpecifierList(functionSpecifierList), functionType(functionType), identifier(std::move(identifier)), parameterDeclarationList(parameterDeclarationList), body(body) {}
+FunctionDefinition::FunctionDefinition(int lineNumber, int columnNumber, const std::vector<FunctionSpecifier> &functionSpecifierList, Type *functionType, std::string identifier, const std::vector<Declaration *> &parameterDeclarationList, Statement *body) : Declaration(lineNumber, columnNumber), functionSpecifierList(functionSpecifierList), functionType(functionType), identifier(std::move(identifier)), parameterDeclarationList(parameterDeclarationList), body(body) {}
 
 FunctionDefinition::~FunctionDefinition() {
     delete functionType;
@@ -15,6 +15,7 @@ FunctionDefinition::~FunctionDefinition() {
 DeclarationClass FunctionDefinition::getClass() {
     return DeclarationClass::FUNCTION_DEFINITION;
 }
+
 
 
 

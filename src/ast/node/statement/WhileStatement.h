@@ -8,7 +8,7 @@ public:
     Expression *condition;
     Statement *body;
 
-    WhileStatement(Expression *condition, Statement *body);
+    WhileStatement(int lineNumber, int columnNumber, Expression *condition, Statement *body);
     ~WhileStatement() override;
     StatementClass getClass() override;
 };

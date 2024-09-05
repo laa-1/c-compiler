@@ -2,14 +2,14 @@
 #include <algorithm>
 
 StringConstant *StringConstantPool::operator[](const std::string &value) {
-    if (map.find(value) != map.end()) {
+    if (map.contains(value)) {
         return map[value];
     }
     return nullptr;
 }
 
 void StringConstantPool::add(const std::string &value) {
-    if (map.find(value) == map.end()) {
+    if (!map.contains(value)) {
         map[value] = new StringConstant(value);
     }
 }

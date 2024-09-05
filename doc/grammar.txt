@@ -105,8 +105,11 @@ assignment-expression-list:
 
 // 存储说明符
 storage-specifier:
+    typedef
 	extern
 	static
+    auto
+    register
 
 // 存储说明符列表
 storage-specifier-list:
@@ -123,6 +126,8 @@ function-specifier-list:
 // 类型限定符
 type-qualifier:
     const
+    restrict
+    volatile
 
 // 类型限定符列表
 type-qualifier-list:

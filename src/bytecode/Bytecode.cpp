@@ -170,17 +170,8 @@ std::string opcode2String(Opcode opcode) {
     assert(false);
 }
 
-Bytecode::Bytecode(SymbolTable *symbolTable, StringConstantPool *stringConstantPool, InstructionSequence *instructionSequence) {
-    memoryUseMap = symbolTable->createMemoryUseMap();
-    memoryUseMap[0] = 8 + stringConstantPool->getMemoryUse() + symbolTable->getMemoryUseRoot();
-    codeArea = instructionSequence->serialize();
-    std::vector<std::uint8_t> stringConstantArea = stringConstantPool->serialize();
-    dataArea = std::vector<std::uint8_t>(8, 0);
-    dataArea.insert(dataArea.end(), stringConstantArea.begin(), stringConstantArea.end());
-}
-
 const std::map<std::uint64_t, std::uint64_t> &Bytecode::getMemoryUseMap() const {
-    return memoryUseMap;
+    return functionMemoryUseMap;
 }
 
 const std::vector<std::uint8_t> &Bytecode::getCodeArea() const {
@@ -191,14 +182,14 @@ const std::vector<std::uint8_t> &Bytecode::getDataArea() const {
     return dataArea;
 }
 
-void Bytecode::outputToFile(std::unique_ptr<std::ofstream> file) {
-    std::uint64_t memoryUseMapSize = memoryUseMap.size();
+void Bytecode::outputToBinaryFile(std::unique_ptr<std::ofstream> file) {
+    std::uint64_t functionMemoryUseMapSize = functionMemoryUseMap.size();
     std::uint64_t codeAreaByteSize = codeArea.size();
     std::uint64_t dataAreaByteSize = dataArea.size();
-    file->write(reinterpret_cast<const char *>(&memoryUseMapSize), sizeof(memoryUseMapSize));
+    file->write(reinterpret_cast<const char *>(&functionMemoryUseMapSize), sizeof(functionMemoryUseMapSize));
     file->write(reinterpret_cast<const char *>(&codeAreaByteSize), sizeof(codeAreaByteSize));
     file->write(reinterpret_cast<const char *>(&dataAreaByteSize), sizeof(dataAreaByteSize));
-    for (auto pair : memoryUseMap) {
+    for (auto pair : functionMemoryUseMap) {
         file->write(reinterpret_cast<const char *>(&pair.first), sizeof(pair.first));
         file->write(reinterpret_cast<const char *>(&pair.second), sizeof(pair.second));
     }
@@ -210,49 +201,19 @@ void Bytecode::outputToFile(std::unique_ptr<std::ofstream> file) {
     }
 }
 
-void Bytecode::loadFromFile(std::unique_ptr<std::ifstream> file) {
-    std::uint64_t memoryUseMapSize;
-    std::uint64_t codeAreaByteSize;
-    std::uint64_t dataAreaByteSize;
-    file->read(reinterpret_cast<char *>(&memoryUseMapSize), sizeof(memoryUseMapSize));
-    file->read(reinterpret_cast<char *>(&codeAreaByteSize), sizeof(codeAreaByteSize));
-    file->read(reinterpret_cast<char *>(&dataAreaByteSize), sizeof(dataAreaByteSize));
-    std::pair<std::uint64_t, std::uint64_t> pair;
-    std::uint8_t byte;
-    for (int i = 0; i < memoryUseMapSize; i++) {
-        file->read(reinterpret_cast<char *>(&pair.first), sizeof(pair.first));
-        file->read(reinterpret_cast<char *>(&pair.second), sizeof(pair.second));
-        memoryUseMap.insert(pair);
-    }
-    for (int i = 0; i < codeAreaByteSize; i++) {
-        file->read(reinterpret_cast<char *>(&byte), sizeof(byte));
-        codeArea.push_back(byte);
-    }
-    for (int i = 0; i < dataAreaByteSize; i++) {
-        file->read(reinterpret_cast<char *>(&byte), sizeof(byte));
-        dataArea.push_back(byte);
-    }
-}
-
-void Bytecode::outputToReadableFile(std::unique_ptr<std::ofstream> file) {
-    *file << "-----MEMORY USE MAP-----" << std::endl;
-    for (auto pair : memoryUseMap) {
+void Bytecode::outputToHumanReadableFile(std::unique_ptr<std::ofstream> file) {
+    *file << "-----FUNCTION MEMORY USE MAP-----" << std::endl;
+    for (auto pair : functionMemoryUseMap) {
         *file << std::setw(20) << std::left << pair.first << pair.second << std::endl;
     }
     *file << std::endl;
     *file << "-----CODE AREA-----" << std::endl;
-    for (int i = 0; i < codeArea.size();) {
-        Opcode opcode ;
+    for (int i = 0; i < codeArea.size(); i += 10) {
+        Opcode opcode;
+        std::uint64_t operand;
         std::memcpy(&opcode, &codeArea[i], sizeof(opcode));
-        if (opcode == Opcode::PUSH_64) {
-            std::uint64_t operand = 0;
-            std::memcpy(&operand, &codeArea[i + 2], sizeof(operand));
-            *file << std::setw(20) << std::left << i << std::setw(20) << std::left << opcode2String(opcode) << operand << std::endl;
-            i += 10;
-        } else {
-            *file << std::setw(20) << std::left << i << opcode2String(opcode) << std::endl;
-            i += 2;
-        }
+        std::memcpy(&operand, &codeArea[i + 2], sizeof(operand));
+        *file << std::setw(20) << std::left << i << std::setw(20) << std::left << opcode2String(opcode) << operand << std::endl;
     }
     *file << std::endl;
     *file << "-----DATA AREA-----" << std::endl;
@@ -260,4 +221,41 @@ void Bytecode::outputToReadableFile(std::unique_ptr<std::ofstream> file) {
         *file << (char) byte << " ";
     }
     *file << std::endl;
+}
+
+Bytecode *Bytecode::build(SymbolTable *symbolTable, StringConstantPool *stringConstantPool, InstructionSequence *instructionSequence) {
+    auto *bytecode = new Bytecode();
+    bytecode->functionMemoryUseMap = symbolTable->createFunctionMemoryUseMap();
+    bytecode->functionMemoryUseMap[0] = 8 + stringConstantPool->getMemoryUse() + symbolTable->getMemoryUseRootScope();
+    bytecode->codeArea = instructionSequence->serialize();
+    std::vector<std::uint8_t> stringConstantArea = stringConstantPool->serialize();
+    bytecode->dataArea = std::vector<std::uint8_t>(8, 0);
+    bytecode->dataArea.insert(bytecode->dataArea.end(), stringConstantArea.begin(), stringConstantArea.end());
+    return bytecode;
+}
+
+Bytecode *Bytecode::build(std::unique_ptr<std::ifstream> file) {
+    auto *bytecode = new Bytecode();
+    std::uint64_t functionMemoryUseMapSize;
+    std::uint64_t codeAreaByteSize;
+    std::uint64_t dataAreaByteSize;
+    file->read(reinterpret_cast<char *>(&functionMemoryUseMapSize), sizeof(functionMemoryUseMapSize));
+    file->read(reinterpret_cast<char *>(&codeAreaByteSize), sizeof(codeAreaByteSize));
+    file->read(reinterpret_cast<char *>(&dataAreaByteSize), sizeof(dataAreaByteSize));
+    std::pair<std::uint64_t, std::uint64_t> pair;
+    std::uint8_t byte;
+    for (int i = 0; i < functionMemoryUseMapSize; i++) {
+        file->read(reinterpret_cast<char *>(&pair.first), sizeof(pair.first));
+        file->read(reinterpret_cast<char *>(&pair.second), sizeof(pair.second));
+        bytecode->functionMemoryUseMap.insert(pair);
+    }
+    for (int i = 0; i < codeAreaByteSize; i++) {
+        file->read(reinterpret_cast<char *>(&byte), sizeof(byte));
+        bytecode->codeArea.push_back(byte);
+    }
+    for (int i = 0; i < dataAreaByteSize; i++) {
+        file->read(reinterpret_cast<char *>(&byte), sizeof(byte));
+        bytecode->dataArea.push_back(byte);
+    }
+    return bytecode;
 }

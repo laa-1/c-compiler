@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-CallExpression::CallExpression(Expression *functionAddress, const std::vector<Expression *> &argumentList) : functionAddress(functionAddress), argumentList(argumentList) {}
+CallExpression::CallExpression(int lineNumber, int columnNumber, Expression *functionAddress, const std::vector<Expression *> &argumentList) : Expression(lineNumber, columnNumber), functionAddress(functionAddress), argumentList(argumentList) {}
 
 CallExpression::~CallExpression() {
     for (Expression *argument : argumentList) {
@@ -14,11 +14,3 @@ ExpressionClass CallExpression::getClass() {
     return ExpressionClass::CALL_EXPRESSION;
 }
 
-Expression *CallExpression::clone() {
-    std::vector<Expression *> newArgumentList;
-    newArgumentList.reserve(argumentList.size());
-    for (auto argument : argumentList) {
-        newArgumentList.push_back(argument->clone());
-    }
-    return new CallExpression(functionAddress->clone(), argumentList);
-}

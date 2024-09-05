@@ -12,7 +12,6 @@
 class InstructionSequenceBuilder {
 private:
     std::vector<Instruction> instructionList;
-    std::uint64_t nextInstructionAddress = 0;
 
 public:
     void appendAdd(BinaryDataType binaryDataType);

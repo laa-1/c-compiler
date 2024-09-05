@@ -7,8 +7,7 @@ class IntegerLiteralExpression : public Expression {
 public:
     int value;
 
-    explicit IntegerLiteralExpression(int value);
+    IntegerLiteralExpression(int lineNumber, int columnNumber, int value);
     ~IntegerLiteralExpression() override = default;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-PointerType::PointerType(Type *sourceType, const std::vector<TypeQualifier> &typeQualifierList) : sourceType(sourceType), typeQualifierList(typeQualifierList) {}
+PointerType::PointerType(int lineNumber, int columnNumber, Type *sourceType, const std::vector<TypeQualifier> &typeQualifierList) : Type(lineNumber, columnNumber), sourceType(sourceType), typeQualifierList(typeQualifierList) {}
 
 PointerType::~PointerType() {
     delete sourceType;
@@ -13,5 +13,6 @@ TypeClass PointerType::getClass() {
 }
 
 Type *PointerType::clone() {
-    return new PointerType(sourceType->clone(), typeQualifierList);
+    return new PointerType(lineNumber, columnNumber, sourceType->clone(), typeQualifierList);
 }
+

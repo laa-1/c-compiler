@@ -9,7 +9,7 @@ public:
     Type *elemType;
     int size;
 
-    ArrayType(Type *elemType, int size);
+    ArrayType(int lineNumber, int columnNumber, Type *elemType, int size);
     ~ArrayType() override;
     TypeClass getClass() override;
     Type *clone() override;

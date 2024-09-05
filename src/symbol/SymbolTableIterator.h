@@ -15,11 +15,7 @@
  */
 class SymbolTableIterator {
 private:
-    struct VisitStatus {
-        Scope *scope = nullptr;
-        int nextChildIndex = 0;
-    };
-    std::stack<VisitStatus> visitStatusStack;
+    std::stack<std::pair<Scope *, int>> visitStatusStack;
 
 public:
     explicit SymbolTableIterator(Scope *rootScope);

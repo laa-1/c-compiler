@@ -6,8 +6,7 @@ class IdentifierExpression : public Expression {
 public:
     std::string identifier;
 
-    explicit IdentifierExpression(std::string identifier);
+    IdentifierExpression(int lineNumber, int columnNumber, const std::string &identifier);
     ~IdentifierExpression() override = default;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

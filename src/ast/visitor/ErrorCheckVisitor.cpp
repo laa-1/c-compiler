@@ -45,8 +45,8 @@
 #include "../../symbol/PointerSymbol.h"
 #include "../../symbol/StatementSymbol.h"
 #include "../../symbol/ScalarSymbol.h"
-#include "../../logger/Logger.h"
-#include "../../builtin/BuiltinFunctionLibrary.h"
+#include "../../error/ErrorHandler.h"
+#include "../../builtin/BuiltInFunctionLibrary.h"
 
 bool isScalarType(Type *type) {
     return type->getClass() == TypeClass::SCALAR_TYPE;
@@ -190,7 +190,6 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
             return isPointerType(targetType) && isSameType(sourceType, ((PointerType *) targetType)->sourceType);
         case TypeClass::POINTER_TYPE:
             return isVoidPointerType(targetType);
-            // return isVoidPointerType(targetType) || (isFunctionType(targetType) && isSameType(((PointerType *)sourceType)->sourceType, targetType));
         case TypeClass::SCALAR_TYPE:
             switch (((ScalarType *) sourceType)->baseType) {
                 case BaseType::VOID:
@@ -346,10 +345,6 @@ bool haveConstTypeQualifier(Type *type) {
     return false;
 }
 
-ErrorCheckVisitor::~ErrorCheckVisitor() {
-    delete stringConstantPool;
-}
-
 void ErrorCheckVisitor::visit(Declaration *declaration) {
     switch (declaration->getClass()) {
         case DeclarationClass::FUNCTION_DECLARATION:
@@ -468,53 +463,46 @@ void ErrorCheckVisitor::visit(Type *type) {
 
 void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
     visit(binaryExpression->leftOperand);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     visit(binaryExpression->rightOperand);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     if (isVoidScalarType(binaryExpression->leftOperand->resultType) || isVoidScalarType(binaryExpression->rightOperand->resultType)) {
-        haveError = true;
-        Logger::error("void scalar can't participate in calculation");
+        ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "void scalar can't participate in calculation");
         return;
     }
     switch (binaryExpression->binaryOperator) {
         case BinaryOperator::SUBSCRIPT:
             if (!isIntegerScalarType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the right operand of the subscript operator must be an integer scalar");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the right operand of the subscript operator must be an integer scalar");
                 return;
             }
             if (isArrayType(binaryExpression->leftOperand->resultType)) {
                 if (isVoidScalarType(((ArrayType *) binaryExpression->leftOperand->resultType)->elemType)) {
-                    haveError = true;
-                    Logger::error("the left operand of the subscript operator can‘t be a void array");
+                    ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the subscript operator can‘t be a void array");
                     return;
                 }
                 binaryExpression->isLvalue = true;
                 binaryExpression->resultType = ((ArrayType *) binaryExpression->leftOperand->resultType)->elemType->clone();
             } else if (isPointerType(binaryExpression->leftOperand->resultType)) {
                 if (isVoidScalarType(((PointerType *) binaryExpression->leftOperand->resultType)->sourceType)) {
-                    haveError = true;
-                    Logger::error("the left operand of the subscript operator can‘t be a void pointer");
+                    ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the subscript operator can‘t be a void pointer");
                     return;
                 }
                 binaryExpression->isLvalue = true;
                 binaryExpression->resultType = ((PointerType *) binaryExpression->leftOperand->resultType)->sourceType->clone();
             } else {
-                haveError = true;
-                Logger::error("the left operand of the subscript operator must be an array or a pointer");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the subscript operator must be an array or a pointer");
                 return;
             }
             break;
         case BinaryOperator::MUL:
         case BinaryOperator::DIV:
             if (!isScalarType(binaryExpression->leftOperand->resultType) || !isScalarType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the multiply or divide operator must be a scalar");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the multiply or divide operator must be a scalar");
                 return;
             }
             if (!canImplicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the multiply or divide operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the multiply or divide operator can't cast implicitly");
                 return;
             }
             binaryExpression->resultType = implicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType)->clone();
@@ -526,23 +514,20 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
                   (isArrayType(binaryExpression->leftOperand->resultType) && isIntegerScalarType(binaryExpression->rightOperand->resultType)) ||
                   (isIntegerScalarType(binaryExpression->leftOperand->resultType) && isPointerType(binaryExpression->rightOperand->resultType)) ||
                   (isIntegerScalarType(binaryExpression->leftOperand->resultType) && isArrayType(binaryExpression->rightOperand->resultType)))) {
-                haveError = true;
-                Logger::error("the operand of the add or subtract operator must be a scalar, pointer or array");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the add or subtract operator must be a scalar, pointer or array");
                 return;
             }
             if (isVoidPointerType(binaryExpression->leftOperand->resultType) || isVoidArrayType(binaryExpression->leftOperand->resultType) || isVoidPointerType(binaryExpression->rightOperand->resultType) || isVoidArrayType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("void pointer can't participate in calculation");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "void pointer can't participate in calculation");
                 return;
             }
             if (!canImplicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the add or subtract operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the add or subtract operator can't cast implicitly");
                 return;
             }
             Type *targetType = implicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType);
             if (targetType->getClass() == TypeClass::ARRAY_TYPE) {
-                binaryExpression->resultType = new PointerType(((ArrayType *) targetType)->elemType->clone(), {});
+                binaryExpression->resultType = new PointerType(-1, -1, ((ArrayType *) targetType)->elemType->clone(), {});
             } else {
                 binaryExpression->resultType = targetType->clone();
             }
@@ -553,13 +538,11 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
         case BinaryOperator::BITWISE_XOR:
         case BinaryOperator::BITWISE_OR:
             if (!isIntegerScalarType(binaryExpression->leftOperand->resultType) || !isIntegerScalarType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the bitwise operator must be an integer scalar");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the bitwise operator must be an integer scalar");
                 return;
             }
             if (!canImplicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the bitwise operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the bitwise operator can't cast implicitly");
                 return;
             }
             binaryExpression->resultType = implicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType)->clone();
@@ -567,8 +550,7 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
         case BinaryOperator::SHIFT_LEFT:
         case BinaryOperator::SHIFT_RIGHT:
             if (!isIntegerScalarType(binaryExpression->leftOperand->resultType) || !isIntegerScalarType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the modulo or shift operator must be an integer scalar");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the modulo or shift operator must be an integer scalar");
                 return;
             }
             binaryExpression->resultType = binaryExpression->leftOperand->resultType->clone();
@@ -581,51 +563,43 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
         case BinaryOperator::NOT_EQUAL:
             if (!((isScalarType(binaryExpression->leftOperand->resultType) || isPointerType(binaryExpression->leftOperand->resultType)) &&
                   (isScalarType(binaryExpression->rightOperand->resultType) || isPointerType(binaryExpression->rightOperand->resultType)))) {
-                haveError = true;
-                Logger::error("the operand of the logical operator must be an integer scalar or pointer");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the logical operator must be an integer scalar or pointer");
                 return;
             }
             if (!canImplicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the logical operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the logical operator can't cast implicitly");
                 return;
             }
-            binaryExpression->resultType = new ScalarType(BaseType::LONG_LONG_INT, {TypeQualifier::CONST});
+            binaryExpression->resultType = new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {TypeQualifier::CONST});
             break;
         case BinaryOperator::LOGICAL_AND:
         case BinaryOperator::LOGICAL_OR:
             if (!((isIntegerScalarType(binaryExpression->leftOperand->resultType) || isPointerType(binaryExpression->leftOperand->resultType)) &&
                   (isIntegerScalarType(binaryExpression->rightOperand->resultType) || isPointerType(binaryExpression->rightOperand->resultType)))) {
-                haveError = true;
-                Logger::error("the operand of the logical operator must be an integer scalar or pointer");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the logical operator must be an integer scalar or pointer");
                 return;
             }
             if (!canImplicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the logical operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the logical operator can't cast implicitly");
                 return;
             }
-            binaryExpression->resultType = new ScalarType(BaseType::LONG_LONG_INT, {TypeQualifier::CONST});
+            binaryExpression->resultType = new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {TypeQualifier::CONST});
             break;
         case BinaryOperator::ASSIGN:
             if (!(isScalarType(binaryExpression->leftOperand->resultType) || isPointerType(binaryExpression->leftOperand->resultType))) {
-                haveError = true;
-                Logger::error("the left operand of the assign operator must be a scalar or pointer");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the assign operator must be a scalar or pointer");
                 return;
             }
             if (haveConstTypeQualifier(binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("can't assign because have the const qualifier");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "can't assign because have the const qualifier");
                 return;
             }
             if (!binaryExpression->leftOperand->isLvalue) {
-                haveError = true;
-                Logger::error("the left operand of the assign operator must be a lvalue");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the assign operator must be a lvalue");
                 return;
             }
             if (!canImplicitCastOneWay(binaryExpression->rightOperand->resultType, binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the assign operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the assign operator can't cast implicitly");
                 return;
             }
             binaryExpression->isLvalue = true;
@@ -634,23 +608,19 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
         case BinaryOperator::MUL_ASSIGN:
         case BinaryOperator::DIV_ASSIGN:
             if (!isScalarType(binaryExpression->leftOperand->resultType) || !isScalarType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the multiply or divide operator must be a scalar");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the multiply or divide operator must be a scalar");
                 return;
             }
             if (haveConstTypeQualifier(binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("can't assign because have the const qualifier");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "can't assign because have the const qualifier");
                 return;
             }
             if (!binaryExpression->leftOperand->isLvalue) {
-                haveError = true;
-                Logger::error("the left operand of the assign operator must be a lvalue");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the assign operator must be a lvalue");
                 return;
             }
             if (!canImplicitCastOneWay(binaryExpression->rightOperand->resultType, binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the assign operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the assign operator can't cast implicitly");
                 return;
             }
             binaryExpression->isLvalue = true;
@@ -659,28 +629,23 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
         case BinaryOperator::SUB_ASSIGN:
             if (!((isScalarType(binaryExpression->leftOperand->resultType) || isPointerType(binaryExpression->leftOperand->resultType)) &&
                   (isScalarType(binaryExpression->rightOperand->resultType)))) {
-                haveError = true;
-                Logger::error("the operand of the add or subtract operator must be a scalar, pointer or array");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the add or subtract operator must be a scalar, pointer or array");
                 return;
             }
             if (isVoidPointerType(binaryExpression->leftOperand->resultType) || isVoidPointerType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("void pointer can't participate in calculation");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "void pointer can't participate in calculation");
                 return;
             }
             if (haveConstTypeQualifier(binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("can't assign because have the const qualifier");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "can't assign because have the const qualifier");
                 return;
             }
             if (!binaryExpression->leftOperand->isLvalue) {
-                haveError = true;
-                Logger::error("the left operand of the assign operator must be a lvalue");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the assign operator must be a lvalue");
                 return;
             }
             if (!canImplicitCastOneWay(binaryExpression->rightOperand->resultType, binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the assign operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the assign operator can't cast implicitly");
                 return;
             }
             binaryExpression->isLvalue = true;
@@ -691,23 +656,19 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
         case BinaryOperator::BITWISE_XOR_ASSIGN:
         case BinaryOperator::BITWISE_OR_ASSIGN:
             if (!isIntegerScalarType(binaryExpression->leftOperand->resultType) || !isIntegerScalarType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the multiply, divide, modulo or bitwise operator must be an integer scalar");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the multiply, divide, modulo or bitwise operator must be an integer scalar");
                 return;
             }
             if (haveConstTypeQualifier(binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("can't assign because have the const qualifier");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "can't assign because have the const qualifier");
                 return;
             }
             if (!binaryExpression->leftOperand->isLvalue) {
-                haveError = true;
-                Logger::error("the left operand of the assign operator must be a lvalue");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the assign operator must be a lvalue");
                 return;
             }
             if (!canImplicitCastOneWay(binaryExpression->rightOperand->resultType, binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the assign operator can't cast implicitly");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the assign operator can't cast implicitly");
                 return;
             }
             binaryExpression->isLvalue = true;
@@ -716,18 +677,15 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
         case BinaryOperator::SHIFT_LEFT_ASSIGN:
         case BinaryOperator::SHIFT_RIGHT_ASSIGN:
             if (!isIntegerScalarType(binaryExpression->leftOperand->resultType) || !isIntegerScalarType(binaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the multiply, divide, modulo or bitwise operator must be an integer scalar");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the operand of the multiply, divide, modulo or bitwise operator must be an integer scalar");
                 return;
             }
             if (haveConstTypeQualifier(binaryExpression->leftOperand->resultType)) {
-                haveError = true;
-                Logger::error("can't assign because have the const qualifier");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "can't assign because have the const qualifier");
                 return;
             }
             if (!binaryExpression->leftOperand->isLvalue) {
-                haveError = true;
-                Logger::error("the left operand of the assign operator must be a lvalue");
+                ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the assign operator must be a lvalue");
                 return;
             }
             binaryExpression->isLvalue = true;
@@ -741,34 +699,30 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
 
 void ErrorCheckVisitor::visit(CallExpression *callExpression) {
     visit(callExpression->functionAddress);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     FunctionType *functionType;
     if (isFunctionType(callExpression->functionAddress->resultType)) {
         functionType = (FunctionType *) callExpression->functionAddress->resultType;
     } else if (isPointerType(callExpression->functionAddress->resultType) && isFunctionType(((PointerType *) callExpression->functionAddress->resultType)->sourceType)) {
         functionType = (FunctionType *)((PointerType *)callExpression->functionAddress->resultType)->sourceType;
     } else {
-        haveError = true;
-        Logger::error("the left operand of the call operator must be a function");
+        ErrorHandler::error(callExpression->lineNumber, callExpression->columnNumber, "the left operand of the call operator must be a function");
         return;
     }
     std::vector<Type *> parameterTypeList = functionType->parameterTypeList;
     if (parameterTypeList.size() != callExpression->argumentList.size()) {
-        haveError = true;
-        Logger::error("the quantity of arguments does not match");
+        ErrorHandler::error(callExpression->lineNumber, callExpression->columnNumber, "the quantity of arguments does not match");
         return;
     }
     for (int i = 0; i < parameterTypeList.size(); i++) {
         visit(callExpression->argumentList[i]);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
         if (isVoidScalarType(callExpression->argumentList[i]->resultType)) {
-            haveError = true;
-            Logger::error("argument can't be a void scalar");
+            ErrorHandler::error(callExpression->lineNumber, callExpression->columnNumber, "argument can't be a void scalar");
             return;
         }
         if (!canImplicitCastOneWay(callExpression->argumentList[i]->resultType, parameterTypeList[i])) {
-            haveError = true;
-            Logger::error("argument can't cast implicitly");
+            ErrorHandler::error(callExpression->lineNumber, callExpression->columnNumber, "argument can't cast implicitly");
             return;
         }
     }
@@ -777,25 +731,24 @@ void ErrorCheckVisitor::visit(CallExpression *callExpression) {
 
 void ErrorCheckVisitor::visit(CastExpression *castExpression) {
     visit(castExpression->targetType);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     visit(castExpression->operand);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     castExpression->resultType = castExpression->targetType->clone();
 }
 
 void ErrorCheckVisitor::visit(CharacterLiteralExpression *characterLiteralExpression) {
-    characterLiteralExpression->resultType = new ScalarType(BaseType::CHAR, {TypeQualifier::CONST});
+    characterLiteralExpression->resultType = new ScalarType(-1, -1, BaseType::CHAR, {TypeQualifier::CONST});
 }
 
 void ErrorCheckVisitor::visit(FloatingPointLiteralExpression *floatingPointLiteralExpression) {
-    floatingPointLiteralExpression->resultType = new ScalarType(BaseType::DOUBLE, {TypeQualifier::CONST});
+    floatingPointLiteralExpression->resultType = new ScalarType(-1, -1, BaseType::DOUBLE, {TypeQualifier::CONST});
 }
 
 void ErrorCheckVisitor::visit(IdentifierExpression *identifierExpression) {
     Symbol *symbol = (*symbolTableBuilder)[identifierExpression->identifier];
     if (symbol == nullptr) {
-        haveError = true;
-        Logger::error("undefined reference to `" + identifierExpression->identifier + "`");
+        ErrorHandler::error(identifierExpression->lineNumber, identifierExpression->columnNumber, "undefined reference to `" + identifierExpression->identifier + "`");
         return;
     }
     switch (symbol->getClass()) {
@@ -823,36 +776,33 @@ void ErrorCheckVisitor::visit(IdentifierExpression *identifierExpression) {
 }
 
 void ErrorCheckVisitor::visit(IntegerLiteralExpression *integerLiteralExpression) {
-    integerLiteralExpression->resultType = new ScalarType(BaseType::INT, {TypeQualifier::CONST});
+    integerLiteralExpression->resultType = new ScalarType(-1, -1, BaseType::INT, {TypeQualifier::CONST});
 }
 
 void ErrorCheckVisitor::visit(StringLiteralExpression *stringLiteralExpression) {
     stringConstantPool->add(stringLiteralExpression->value);
-    stringLiteralExpression->resultType = new PointerType(new ScalarType(BaseType::CHAR, {TypeQualifier::CONST}), {TypeQualifier::CONST});
+    stringLiteralExpression->resultType = new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::CHAR, {TypeQualifier::CONST}), {TypeQualifier::CONST});
 }
 
 void ErrorCheckVisitor::visit(TernaryExpression *ternaryExpression) {
     visit(ternaryExpression->leftOperand);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     visit(ternaryExpression->middleOperand);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     visit(ternaryExpression->rightOperand);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     if ((isVoidScalarType(ternaryExpression->leftOperand->resultType)) || isVoidScalarType(ternaryExpression->middleOperand->resultType) || isVoidScalarType(ternaryExpression->rightOperand->resultType)) {
-        haveError = true;
-        Logger::error("void scalar can't participate in calculation");
+        ErrorHandler::error(ternaryExpression->lineNumber, ternaryExpression->columnNumber, "void scalar can't participate in calculation");
         return;
     }
     switch (ternaryExpression->ternaryOperator) {
         case TernaryOperator::CONDITION:
             if (!(isIntegerScalarType(ternaryExpression->leftOperand->resultType) || isPointerType(ternaryExpression->leftOperand->resultType))) {
-                haveError = true;
-                Logger::error("the condition of the condition ternary operator must be an integer scalar or pointer");
+                ErrorHandler::error(ternaryExpression->lineNumber, ternaryExpression->columnNumber, "the condition of the condition ternary operator must be an integer scalar or pointer");
                 return;
             }
             if (!canImplicitCastTwoWay(ternaryExpression->middleOperand->resultType, ternaryExpression->rightOperand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the condition ternary operator can't cast implicitly");
+                ErrorHandler::error(ternaryExpression->lineNumber, ternaryExpression->columnNumber, "the operand of the condition ternary operator can't cast implicitly");
                 return;
             }
             ternaryExpression->resultType = implicitCastTwoWay(ternaryExpression->middleOperand->resultType, ternaryExpression->rightOperand->resultType)->clone();
@@ -862,74 +812,85 @@ void ErrorCheckVisitor::visit(TernaryExpression *ternaryExpression) {
 
 void ErrorCheckVisitor::visit(UnaryExpression *unaryExpression) {
     visit(unaryExpression->operand);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     if (isVoidScalarType(unaryExpression->operand->resultType)) {
-        haveError = true;
-        Logger::error("void scalar can't participate in calculation");
+        ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "void scalar can't participate in calculation");
         return;
     }
     switch (unaryExpression->unaryOperator) {
-        case UnaryOperator::INCREMENT:
-        case UnaryOperator::DECREMENT:
+        case UnaryOperator::PREINCREMENT:
+        case UnaryOperator::PREDECREMENT:
             if (!(isScalarType(unaryExpression->operand->resultType) || isPointerType(unaryExpression->operand->resultType))) {
-                haveError = true;
-                Logger::error("the operand of the increment or decrement operator must be a scalar or pointer");
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the increment or decrement operator must be a scalar or pointer");
                 return;
             }
             if (isVoidPointerType(unaryExpression->operand->resultType)) {
-                haveError = true;
-                Logger::error("void pointer can't participate in calculation");
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "void pointer can't participate in calculation");
                 return;
             }
             if (haveConstTypeQualifier(unaryExpression->operand->resultType)) {
-                haveError = true;
-                Logger::error("can't assign because have a const qualifier");
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "can't assign because have a const qualifier");
                 return;
             }
             if (!unaryExpression->operand->isLvalue) {
-                haveError = true;
-                Logger::error("the left operand of the increment or decrement operator must be a lvalue");
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the left operand of the increment or decrement operator must be a lvalue");
                 return;
             }
             unaryExpression->isLvalue = true;
             unaryExpression->resultType = unaryExpression->operand->resultType->clone();
             break;
-        case UnaryOperator::TAKE_ADDRESS:
-            if (!unaryExpression->operand->isLvalue) {
-                haveError = true;
-                Logger::error("the left operand of the take address operator must be a lvalue");
+        case UnaryOperator::POSTINCREMENT:
+        case UnaryOperator::POSTDECREMENT:
+            if (!(isScalarType(unaryExpression->operand->resultType) || isPointerType(unaryExpression->operand->resultType))) {
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the increment or decrement operator must be a scalar or pointer");
                 return;
             }
-            unaryExpression->resultType = new PointerType(unaryExpression->operand->resultType->clone(), {TypeQualifier::CONST});
+            if (isVoidPointerType(unaryExpression->operand->resultType)) {
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "void pointer can't participate in calculation");
+                return;
+            }
+            if (haveConstTypeQualifier(unaryExpression->operand->resultType)) {
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "can't assign because have a const qualifier");
+                return;
+            }
+            if (!unaryExpression->operand->isLvalue) {
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the left operand of the increment or decrement operator must be a lvalue");
+                return;
+            }
+            unaryExpression->isLvalue = false;
+            unaryExpression->resultType = unaryExpression->operand->resultType->clone();
+            break;
+        case UnaryOperator::TAKE_ADDRESS:
+            if (!unaryExpression->operand->isLvalue) {
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the left operand of the take address operator must be a lvalue");
+                return;
+            }
+            unaryExpression->resultType = new PointerType(-1, -1, unaryExpression->operand->resultType->clone(), {TypeQualifier::CONST});
             break;
         case UnaryOperator::DEREFERENCE:
             if (isArrayType(unaryExpression->operand->resultType)) {
                 if (isVoidScalarType(((ArrayType *) unaryExpression->operand->resultType)->elemType)) {
-                    haveError = true;
-                    Logger::error("the operand of the dereference operator can't be a void array");
+                    ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the dereference operator can't be a void array");
                     return;
                 }
                 unaryExpression->isLvalue = true;
                 unaryExpression->resultType = ((ArrayType *) unaryExpression->operand->resultType)->elemType->clone();
             } else if (isPointerType(unaryExpression->operand->resultType)) {
                 if (isVoidScalarType(((PointerType *) unaryExpression->operand->resultType)->sourceType)) {
-                    haveError = true;
-                    Logger::error("the operand of the dereference operator can't be a void pointer");
+                    ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the dereference operator can't be a void pointer");
                     return;
                 }
                 unaryExpression->isLvalue = true;
                 unaryExpression->resultType = ((PointerType *) unaryExpression->operand->resultType)->sourceType->clone();
             } else {
-                haveError = true;
-                Logger::error("the operand of the dereference operator must be a pointer or array");
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the dereference operator must be a pointer or array");
                 return;
             }
             break;
         case UnaryOperator::PLUS:
         case UnaryOperator::MINUS:
             if (!isIntegerScalarType(unaryExpression->operand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the plus or minus operator must be an integer scalar");
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the plus or minus operator must be an integer scalar");
                 return;
             }
             switch (((ScalarType *) unaryExpression->operand->resultType)->baseType) {
@@ -945,59 +906,57 @@ void ErrorCheckVisitor::visit(UnaryExpression *unaryExpression) {
                     unaryExpression->resultType = unaryExpression->operand->resultType->clone();
                     break;
                 case BaseType::UNSIGNED_CHAR:
-                    unaryExpression->resultType = new ScalarType(BaseType::CHAR, {TypeQualifier::CONST});
+                    unaryExpression->resultType = new ScalarType(-1, -1, BaseType::CHAR, {TypeQualifier::CONST});
                     break;
                 case BaseType::UNSIGNED_SHORT:
-                    unaryExpression->resultType = new ScalarType(BaseType::SHORT, {TypeQualifier::CONST});
+                    unaryExpression->resultType = new ScalarType(-1, -1, BaseType::SHORT, {TypeQualifier::CONST});
                     break;
                 case BaseType::UNSIGNED_INT:
                 case BaseType::UNSIGNED_LONG_INT:
-                    unaryExpression->resultType = new ScalarType(BaseType::INT, {TypeQualifier::CONST});
+                    unaryExpression->resultType = new ScalarType(-1, -1, BaseType::INT, {TypeQualifier::CONST});
                     break;
                 case BaseType::UNSIGNED_LONG_LONG_INT:
-                    unaryExpression->resultType = new ScalarType(BaseType::LONG_LONG_INT, {TypeQualifier::CONST});
+                    unaryExpression->resultType = new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {TypeQualifier::CONST});
                     break;
             }
             break;
         case UnaryOperator::BITWISE_NOT:
             if (!isIntegerScalarType(unaryExpression->operand->resultType)) {
-                haveError = true;
-                Logger::error("the operand of the bitwise not operator must be an integer scalar");
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the bitwise not operator must be an integer scalar");
                 return;
             }
             unaryExpression->resultType = unaryExpression->operand->resultType->clone();
             break;
         case UnaryOperator::LOGICAL_NOT:
             if (!(isIntegerScalarType(unaryExpression->operand->resultType) || isPointerType(unaryExpression->operand->resultType))) {
-                haveError = true;
-                Logger::error("the operand of the logical not operator must be an integer scalar or pointer");
+                ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the logical not operator must be an integer scalar or pointer");
                 return;
             }
-            unaryExpression->resultType = new ScalarType(BaseType::LONG_LONG_INT, {TypeQualifier::CONST});
+            unaryExpression->resultType = new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {TypeQualifier::CONST});
             break;
         case UnaryOperator::SIZEOF:
-            unaryExpression->resultType = new ScalarType(BaseType::UNSIGNED_LONG_LONG_INT, {TypeQualifier::CONST});
+            unaryExpression->resultType = new ScalarType(-1, -1, BaseType::UNSIGNED_LONG_LONG_INT, {TypeQualifier::CONST});
             break;
     }
 }
 
 void ErrorCheckVisitor::visit(ArrayType *arrayType) {
     visit(arrayType->elemType);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
 }
 
 void ErrorCheckVisitor::visit(FunctionType *functionType) {
     visit(functionType->returnType);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     for (auto parameterType : functionType->parameterTypeList) {
         visit(parameterType);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
 }
 
 void ErrorCheckVisitor::visit(PointerType *pointerType) {
     visit(pointerType->sourceType);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
 }
 
 void ErrorCheckVisitor::visit(ScalarType *scalarType) {
@@ -1005,7 +964,7 @@ void ErrorCheckVisitor::visit(ScalarType *scalarType) {
 
 void ErrorCheckVisitor::visit(FunctionDeclaration *functionDeclaration) {
     visit(functionDeclaration->functionType);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     undefinedFunctionSet.insert(functionDeclaration->identifier);
     if ((*symbolTableBuilder)[functionDeclaration->identifier] == nullptr) {
         symbolTableBuilder->insertSymbol(new FunctionSymbol(functionDeclaration->identifier, (FunctionType *) functionDeclaration->functionType->clone()));
@@ -1023,47 +982,42 @@ void ErrorCheckVisitor::visit(FunctionDefinition *functionDefinition) {
     symbolTableBuilder->createScope(functionDefinition->identifier);
     for (auto parameterDeclaration : functionDefinition->parameterDeclarationList) {
         if (parameterDeclaration->getClass() == DeclarationClass::FUNCTION_DECLARATION || parameterDeclaration->getClass() == DeclarationClass::FUNCTION_DEFINITION) {
-            haveError = true;
-            Logger::error("invalid definition of `" + functionDefinition->identifier + "` because parameter can't be a function");
+            ErrorHandler::error(functionDefinition->lineNumber, functionDefinition->columnNumber, "invalid definition of `" + functionDefinition->identifier + "` because parameter can't be a function");
             return;
         }
         visit(parameterDeclaration);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
     currentFunctionType = (FunctionType *) functionDefinition->functionType;
     visit(functionDefinition->body);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     currentFunctionType = nullptr;
     symbolTableBuilder->exitScope();
 }
 
 void ErrorCheckVisitor::visit(VariableDeclaration *variableDeclaration) {
     visit(variableDeclaration->variableType);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     for (auto initialValue : variableDeclaration->initialValueList) {
         visit(initialValue);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
     if ((*symbolTableBuilder)[variableDeclaration->identifier] != nullptr) {
-        haveError = true;
-        Logger::error("multiple definition of `" + variableDeclaration->identifier + "`");
+        ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "multiple definition of `" + variableDeclaration->identifier + "`");
         return;
     }
     switch (variableDeclaration->variableType->getClass()) {
         case TypeClass::ARRAY_TYPE: {
             if (isVoidScalarType(((ArrayType *) variableDeclaration->variableType)->elemType)) {
-                haveError = true;
-                Logger::error("invalid definition of `" + variableDeclaration->identifier + "` because the elem of the array can't be a void scalar");
+                ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because the elem of the array can't be a void scalar");
                 return;
             }
             if (((ArrayType *) variableDeclaration->variableType)->size < 1) {
-                haveError = true;
-                Logger::error("invalid definition of `" + variableDeclaration->identifier + "` because the size of the array is invalid");
+                ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because the size of the array is invalid");
                 return;
             }
             if (!variableDeclaration->initialValueList.empty() && ((ArrayType *) variableDeclaration->variableType)->size != variableDeclaration->initialValueList.size()) {
-                haveError = true;
-                Logger::error("invalid definition of `" + variableDeclaration->identifier + "` because the size of the array is not equal to the size of the initial value list");
+                ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because the size of the array is not equal to the size of the initial value list");
                 return;
             }
             symbolTableBuilder->insertSymbol(new ArraySymbol(variableDeclaration->identifier, (ArrayType *) variableDeclaration->variableType->clone()));
@@ -1071,13 +1025,11 @@ void ErrorCheckVisitor::visit(VariableDeclaration *variableDeclaration) {
         }
         case TypeClass::SCALAR_TYPE: {
             if (isVoidScalarType(variableDeclaration->variableType)) {
-                haveError = true;
-                Logger::error("invalid definition of `" + variableDeclaration->identifier + "` because it is a void scalar");
+                ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because it is a void scalar");
                 return;
             }
             if (variableDeclaration->initialValueList.size() > 1) {
-                haveError = true;
-                Logger::error("invalid definition of `" + variableDeclaration->identifier + "` because it has multiple initial values");
+                ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because it has multiple initial values");
                 return;
             }
             symbolTableBuilder->insertSymbol(new ScalarSymbol(variableDeclaration->identifier, (ScalarType *) variableDeclaration->variableType->clone()));
@@ -1087,8 +1039,7 @@ void ErrorCheckVisitor::visit(VariableDeclaration *variableDeclaration) {
             assert(false);
         case TypeClass::POINTER_TYPE: {
             if (variableDeclaration->initialValueList.size() > 1 && !isCharPointerType(variableDeclaration->variableType)) {
-                haveError = true;
-                Logger::error("invalid definition of `" + variableDeclaration->identifier + "` because it has multiple initial values");
+                ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because it has multiple initial values");
                 return;
             }
             symbolTableBuilder->insertSymbol(new PointerSymbol(variableDeclaration->identifier, (PointerType *) variableDeclaration->variableType->clone()));
@@ -1099,21 +1050,19 @@ void ErrorCheckVisitor::visit(VariableDeclaration *variableDeclaration) {
 
 void ErrorCheckVisitor::visit(BreakStatement *breakStatement) {
     if (levelCanBreak <= 0) {
-        haveError = true;
-        Logger::error("break statement must be in a loop or switch statement");
+        ErrorHandler::error(breakStatement->lineNumber, breakStatement->columnNumber, "break statement must be in a loop or switch statement");
         return;
     }
 }
 
 void ErrorCheckVisitor::visit(CaseStatement *caseStatement) {
     if (levelSwitch <= 0) {
-        haveError = true;
-        Logger::error("case statement must be in a switch statement");
+        ErrorHandler::error(caseStatement->lineNumber, caseStatement->columnNumber, "case statement must be in a switch statement");
         return;
     }
     if (caseStatement->statement != nullptr) {
         visit(caseStatement->statement);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
 }
 
@@ -1121,15 +1070,14 @@ void ErrorCheckVisitor::visit(CompoundStatement *compoundStatement) {
     symbolTableBuilder->createScope("");
     for (Statement *statement : compoundStatement->statementList) {
         visit(statement);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
     symbolTableBuilder->exitScope();
 }
 
 void ErrorCheckVisitor::visit(ContinueStatement *continueStatement) {
     if (levelCanContinue <= 0) {
-        haveError = true;
-        Logger::error("continue statement must be in a loop statement");
+        ErrorHandler::error(continueStatement->lineNumber, continueStatement->columnNumber, "continue statement must be in a loop statement");
         return;
     }
 }
@@ -1137,19 +1085,18 @@ void ErrorCheckVisitor::visit(ContinueStatement *continueStatement) {
 void ErrorCheckVisitor::visit(DeclarationStatement *declarationStatement) {
     for (Declaration *declaration : declarationStatement->declarationList) {
         visit(declaration);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
 }
 
 void ErrorCheckVisitor::visit(DefaultStatement *defaultStatement) {
     if (levelSwitch <= 0) {
-        haveError = true;
-        Logger::error("default statement must be in a switch statement");
+        ErrorHandler::error(defaultStatement->lineNumber, defaultStatement->columnNumber, "default statement must be in a switch statement");
         return;
     }
     if (defaultStatement->statement != nullptr) {
         visit(defaultStatement->statement);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
 }
 
@@ -1157,14 +1104,13 @@ void ErrorCheckVisitor::visit(DoWhileStatement *doWhileStatement) {
     levelCanBreak++;
     levelCanContinue++;
     visit(doWhileStatement->body);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     levelCanBreak--;
     levelCanContinue--;
     visit(doWhileStatement->condition);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     if (!(isIntegerScalarType(doWhileStatement->condition->resultType) || isPointerType(doWhileStatement->condition->resultType))) {
-        haveError = true;
-        Logger::error("the condition of the do-while statement must be an integer scalar or pointer");
+        ErrorHandler::error(doWhileStatement->lineNumber, doWhileStatement->columnNumber, "the condition of the do-while statement must be an integer scalar or pointer");
         return;
     }
 }
@@ -1172,7 +1118,7 @@ void ErrorCheckVisitor::visit(DoWhileStatement *doWhileStatement) {
 void ErrorCheckVisitor::visit(ExpressionStatement *expressionStatement) {
     if (expressionStatement->expression != nullptr) {
         visit(expressionStatement->expression);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
 }
 
@@ -1180,29 +1126,28 @@ void ErrorCheckVisitor::visit(ForStatement *forStatement) {
     symbolTableBuilder->createScope("");
     for (auto initDeclaration : forStatement->declarationList) {
         visit(initDeclaration);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
     if (forStatement->init != nullptr) {
         visit(forStatement->init);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
     if (forStatement->condition != nullptr) {
         visit(forStatement->condition);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
         if (!(isIntegerScalarType(forStatement->condition->resultType) || isPointerType(forStatement->condition->resultType))) {
-            haveError = true;
-            Logger::error("the condition of the for statement must be an integer scalar or pointer");
+            ErrorHandler::error(forStatement->lineNumber, forStatement->columnNumber, "the condition of the for statement must be an integer scalar or pointer");
             return;
         }
     }
     if (forStatement->update != nullptr) {
         visit(forStatement->update);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
     levelCanBreak++;
     levelCanContinue++;
     visit(forStatement->body);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     levelCanBreak--;
     levelCanContinue--;
     symbolTableBuilder->exitScope();
@@ -1210,68 +1155,60 @@ void ErrorCheckVisitor::visit(ForStatement *forStatement) {
 
 void ErrorCheckVisitor::visit(GotoStatement *gotoStatement) {
     if ((*symbolTableBuilder)[gotoStatement->identifier] == nullptr) {
-        haveError = true;
-        Logger::error("undefined reference to `" + gotoStatement->identifier + "`");
+        ErrorHandler::error(gotoStatement->lineNumber, gotoStatement->columnNumber, "undefined reference to `" + gotoStatement->identifier + "`");
         return;
     }
     Symbol *symbol = (*symbolTableBuilder)[gotoStatement->identifier];
     if (symbol->getClass() != SymbolClass::STATEMENT_SYMBOL) {
-        haveError = true;
-        Logger::error("the identifier of the goto statement must be a statement identifier");
+        ErrorHandler::error(gotoStatement->lineNumber, gotoStatement->columnNumber, "the identifier of the goto statement must be a statement identifier");
         return;
     }
 }
 
 void ErrorCheckVisitor::visit(IfStatement *ifStatement) {
     visit(ifStatement->condition);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     if (!(isIntegerScalarType(ifStatement->condition->resultType) || isPointerType(ifStatement->condition->resultType))) {
-        haveError = true;
-        Logger::error("the condition of the if statement must be an integer scalar or pointer");
+        ErrorHandler::error(ifStatement->lineNumber, ifStatement->columnNumber, "the condition of the if statement must be an integer scalar or pointer");
         return;
     }
     visit(ifStatement->trueBody);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     if (ifStatement->falseBody != nullptr) {
         visit(ifStatement->falseBody);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
 }
 
 void ErrorCheckVisitor::visit(LabelStatement *labelStatement) {
     if ((*symbolTableBuilder)[labelStatement->identifier] != nullptr) {
-        haveError = true;
-        Logger::error("multiple definition of `" + labelStatement->identifier + "`");
+        ErrorHandler::error(labelStatement->lineNumber, labelStatement->columnNumber, "multiple definition of `" + labelStatement->identifier + "`");
         return;
     }
     symbolTableBuilder->insertSymbol(new StatementSymbol(labelStatement->identifier));
     visit(labelStatement->statement);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
 }
 
 void ErrorCheckVisitor::visit(ReturnStatement *returnStatement) {
     if (currentFunctionType == nullptr) {
-        haveError = true;
-        Logger::error("return statement must be in a function definition");
+        ErrorHandler::error(returnStatement->lineNumber, returnStatement->columnNumber, "return statement must be in a function definition");
         return;
     }
     if (returnStatement->value == nullptr) {
         if (!isVoidScalarType(currentFunctionType->returnType)) {
-            haveError = true;
-            Logger::error("the return value type of the return statement does not match");
+            ErrorHandler::error(returnStatement->lineNumber, returnStatement->columnNumber, "the return value type of the return statement does not match");
             return;
         }
     } else {
         visit(returnStatement->value);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
         if (isVoidScalarType(currentFunctionType->returnType)) {
-            haveError = true;
-            Logger::error("the return value type of the return statement does not match");
+            ErrorHandler::error(returnStatement->lineNumber, returnStatement->columnNumber, "the return value type of the return statement does not match");
             return;
         }
         if (!canImplicitCastOneWay(returnStatement->value->resultType, currentFunctionType->returnType)) {
-            haveError = true;
-            Logger::error("the return value type of the return statement does not match");
+            ErrorHandler::error(returnStatement->lineNumber, returnStatement->columnNumber, "the return value type of the return statement does not match");
             return;
         }
     }
@@ -1280,15 +1217,13 @@ void ErrorCheckVisitor::visit(ReturnStatement *returnStatement) {
 
 void ErrorCheckVisitor::visit(SwitchStatement *switchStatement) {
     visit(switchStatement->expression);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     if (!isIntegerScalarType(switchStatement->expression->resultType)) {
-        haveError = true;
-        Logger::error("the expression of the switch statement must be a integer scalar");
+        ErrorHandler::error(switchStatement->lineNumber, switchStatement->columnNumber, "the expression of the switch statement must be a integer scalar");
         return;
     }
     if (switchStatement->body->getClass() != StatementClass::COMPOUND_STATEMENT) {
-        haveError = true;
-        Logger::error("the body of the switch statement must be a compound statement consisting of case statement");
+        ErrorHandler::error(switchStatement->lineNumber, switchStatement->columnNumber, "the body of the switch statement must be a compound statement consisting of case statement");
         return;
     }
     bool haveDefaultStatement = false;
@@ -1296,77 +1231,65 @@ void ErrorCheckVisitor::visit(SwitchStatement *switchStatement) {
     for (auto statement : ((CompoundStatement *) switchStatement->body)->statementList) {
         if (statement->getClass() == StatementClass::CASE_STATEMENT) {
             if (std::find(caseValueList.begin(), caseValueList.end(), ((CaseStatement *) statement)->value) != caseValueList.end()) {
-                haveError = true;
-                Logger::error("the body of the switch statement have repeated case statement");
+                ErrorHandler::error(switchStatement->lineNumber, switchStatement->columnNumber, "the body of the switch statement have repeated case statement");
                 return;
             }
             caseValueList.push_back(((CaseStatement *) statement)->value);
         } else if (statement->getClass() == StatementClass::DEFAULT_STATEMENT) {
             if (haveDefaultStatement) {
-                haveError = true;
-                Logger::error("the body of the switch statement have repeated case statement");
+                ErrorHandler::error(switchStatement->lineNumber, switchStatement->columnNumber, "the body of the switch statement have repeated case statement");
                 return;
             }
             haveDefaultStatement = true;
         } else {
-            haveError = true;
-            Logger::error("the body of the switch statement must be a compound statement consisting of case statement");
+            ErrorHandler::error(switchStatement->lineNumber, switchStatement->columnNumber, "the body of the switch statement must be a compound statement consisting of case statement");
             return;
         }
     }
     levelSwitch++;
     levelCanBreak++;
     visit(switchStatement->body);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     levelCanBreak--;
     levelSwitch--;
 }
 
 void ErrorCheckVisitor::visit(WhileStatement *whileStatement) {
     visit(whileStatement->condition);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     levelCanBreak++;
     levelCanContinue++;
     visit(whileStatement->body);
-    if (haveError) return;
+    if (ErrorHandler::getStatus()) return;
     levelCanBreak--;
     levelCanContinue--;
     if (!(isIntegerScalarType(whileStatement->condition->resultType) || isPointerType(whileStatement->condition->resultType))) {
-        haveError = true;
-        Logger::error("the condition of the while statement must be an integer scalar or pointer");
+        ErrorHandler::error(whileStatement->lineNumber, whileStatement->columnNumber, "the condition of the while statement must be an integer scalar or pointer");
         return;
     }
 }
 
 void ErrorCheckVisitor::visit(TranslationUnit *translationUnit) {
-    BuiltinFunctionLibrary::insertSymbol(symbolTableBuilder);
+    BuiltInFunctionLibrary::insertSymbol(symbolTableBuilder);
     for (auto declaration : translationUnit->declarationList) {
         visit(declaration);
-        if (haveError) return;
+        if (ErrorHandler::getStatus()) return;
     }
     if (!haveEntryFunction) {
-        haveError = true;
-        Logger::error("entry function not found");
+        ErrorHandler::error(translationUnit->lineNumber, translationUnit->columnNumber, "entry function not found");
         return;
     }
     if (!undefinedFunctionSet.empty()) {
-        haveError = true;
-        Logger::error("existence of declared but undefined functions");
+        ErrorHandler::error(translationUnit->lineNumber, translationUnit->columnNumber, "existence of declared but undefined functions");
         return;
     }
 }
 
-SymbolTable *ErrorCheckVisitor::moveSymbolTable() {
-    return symbolTableBuilder->build();
-}
-
-StringConstantPool *ErrorCheckVisitor::moveStringConstantPool() {
-    StringConstantPool *returnStringConstantSequence = stringConstantPool;
-    stringConstantPool = nullptr; // 防止析构delete
-    return returnStringConstantSequence;
-}
-
-bool ErrorCheckVisitor::isHaveError() const {
-    return haveError;
+void ErrorCheckVisitor::checkError(TranslationUnit *translationUnit, SymbolTable *&symbolTable, StringConstantPool *&stringConstantPool) {
+    auto *errorCheckVisitor = new ErrorCheckVisitor();
+    translationUnit->accept(errorCheckVisitor);
+    symbolTable = errorCheckVisitor->symbolTableBuilder->build();
+    stringConstantPool = errorCheckVisitor->stringConstantPool;
+    delete errorCheckVisitor;
 }
 

@@ -7,7 +7,7 @@ public:
     std::string identifier;
     Statement *statement;
 
-    LabelStatement(std::string identifier, Statement *statement);
+    LabelStatement(int lineNumber, int columnNumber, std::string identifier, Statement *statement);
     ~LabelStatement() override;
     StatementClass getClass() override;
 };

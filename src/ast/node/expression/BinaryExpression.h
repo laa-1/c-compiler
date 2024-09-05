@@ -9,8 +9,7 @@ public:
     Expression *leftOperand;
     Expression *rightOperand;
 
-    BinaryExpression(BinaryOperator binaryOperator, Expression *leftOperand, Expression *rightOperand);
+    BinaryExpression(int lineNumber, int columnNumber, BinaryOperator binaryOperator, Expression *leftOperand, Expression *rightOperand);
     ~BinaryExpression() override;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

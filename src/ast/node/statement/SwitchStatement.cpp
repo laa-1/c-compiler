@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-SwitchStatement::SwitchStatement(Expression *expression, Statement *body) : expression(expression), body(body) {}
+SwitchStatement::SwitchStatement(int lineNumber, int columnNumber, Expression *expression, Statement *body) : Statement(lineNumber, columnNumber), expression(expression), body(body) {}
 
 SwitchStatement::~SwitchStatement() {
     delete expression;

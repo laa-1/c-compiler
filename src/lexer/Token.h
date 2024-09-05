@@ -2,7 +2,7 @@
 
 #include <string>
 
-enum class TokenId : int {
+enum class TokenId : short {
     KEYWORD_AUTO,
     KEYWORD_BREAK,
     KEYWORD_CASE,
@@ -93,4 +93,6 @@ enum class TokenId : int {
 struct Token {
     TokenId id;
     std::string value;
+    int lineNumber;
+    int columnNumber;
 };

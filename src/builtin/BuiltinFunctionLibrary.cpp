@@ -1,46 +1,46 @@
-#include "BuiltinFunctionLibrary.h"
+#include "BuiltInFunctionLibrary.h"
 
 #include "../symbol/ScalarSymbol.h"
 #include "../symbol/PointerSymbol.h"
 
 
-void BuiltinFunctionLibrary::insertSymbol(std::unique_ptr<SymbolTableBuilder> &symbolTableBuilder) {
+void BuiltInFunctionLibrary::insertSymbol(std::unique_ptr<SymbolTableBuilder> &symbolTableBuilder) {
     std::vector<FunctionDeclaration *> functionDeclarationList;
-    symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_i64", new FunctionType(new ScalarType(BaseType::VOID, {}), {new PointerType(new ScalarType(BaseType::LONG_LONG_INT, {}), {})})));
+    symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_i64", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), {new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {}), {})})));
     symbolTableBuilder->createScope("scan_i64");
-    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(new ScalarType(BaseType::LONG_LONG_INT, {}), {})));
+    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {}), {})));
     symbolTableBuilder->exitScope();
-    symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_u64", new FunctionType(new ScalarType(BaseType::VOID, {}), {new PointerType(new ScalarType(BaseType::UNSIGNED_LONG_LONG_INT, {}), {})})));
+    symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_u64", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), {new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::UNSIGNED_LONG_LONG_INT, {}), {})})));
     symbolTableBuilder->createScope("scan_u64");
-    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(new ScalarType(BaseType::UNSIGNED_LONG_LONG_INT, {}), {})));
+    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::UNSIGNED_LONG_LONG_INT, {}), {})));
     symbolTableBuilder->exitScope();
-    symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_f64", new FunctionType(new ScalarType(BaseType::VOID, {}), {new PointerType(new ScalarType(BaseType::DOUBLE, {}), {})})));
+    symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_f64", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), { new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::DOUBLE, {}), {})})));
     symbolTableBuilder->createScope("scan_f64");
-    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(new ScalarType(BaseType::DOUBLE, {}), {})));
+    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::DOUBLE, {}), {})));
     symbolTableBuilder->exitScope();
-    symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_s", new FunctionType(new ScalarType(BaseType::VOID, {}), {new PointerType(new ScalarType(BaseType::CHAR, {}), {})})));
+    symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_s", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), {new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::CHAR, {}), {})})));
     symbolTableBuilder->createScope("scan_s");
-    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(new ScalarType(BaseType::CHAR, {}), {})));
+    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::CHAR, {}), {})));
     symbolTableBuilder->exitScope();
-    symbolTableBuilder->insertSymbol(new FunctionSymbol("print_i64", new FunctionType(new ScalarType(BaseType::VOID, {}), {new ScalarType(BaseType::LONG_LONG_INT, {})})));
+    symbolTableBuilder->insertSymbol(new FunctionSymbol("print_i64", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), {new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {})})));
     symbolTableBuilder->createScope("print_i64");
-    symbolTableBuilder->insertSymbol(new ScalarSymbol("value", new ScalarType(BaseType::LONG_LONG_INT, {})));
+    symbolTableBuilder->insertSymbol(new ScalarSymbol("value", new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {})));
     symbolTableBuilder->exitScope();
-    symbolTableBuilder->insertSymbol(new FunctionSymbol("print_u64", new FunctionType(new ScalarType(BaseType::VOID, {}), {new ScalarType(BaseType::UNSIGNED_LONG_LONG_INT, {})})));
+    symbolTableBuilder->insertSymbol(new FunctionSymbol("print_u64", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), {new ScalarType(-1, -1, BaseType::UNSIGNED_LONG_LONG_INT, {})})));
     symbolTableBuilder->createScope("print_u64");
-    symbolTableBuilder->insertSymbol(new ScalarSymbol("value", new ScalarType(BaseType::UNSIGNED_LONG_LONG_INT, {})));
+    symbolTableBuilder->insertSymbol(new ScalarSymbol("value", new ScalarType(-1, -1, BaseType::UNSIGNED_LONG_LONG_INT, {})));
     symbolTableBuilder->exitScope();
-    symbolTableBuilder->insertSymbol(new FunctionSymbol("print_f64", new FunctionType(new ScalarType(BaseType::VOID, {}), {new ScalarType(BaseType::DOUBLE, {})})));
+    symbolTableBuilder->insertSymbol(new FunctionSymbol("print_f64", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), {new ScalarType(-1, -1, BaseType::DOUBLE, {})})));
     symbolTableBuilder->createScope("print_f64");
-    symbolTableBuilder->insertSymbol(new ScalarSymbol("value", new ScalarType(BaseType::DOUBLE, {})));
+    symbolTableBuilder->insertSymbol(new ScalarSymbol("value", new ScalarType(-1, -1, BaseType::DOUBLE, {})));
     symbolTableBuilder->exitScope();
-    symbolTableBuilder->insertSymbol(new FunctionSymbol("print_s", new FunctionType(new ScalarType(BaseType::VOID, {}), {new PointerType(new ScalarType(BaseType::CHAR, {}), {})})));
+    symbolTableBuilder->insertSymbol(new FunctionSymbol("print_s", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), {new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::CHAR, {}), {})})));
     symbolTableBuilder->createScope("print_s");
-    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(new ScalarType(BaseType::CHAR, {}), {})));
+    symbolTableBuilder->insertSymbol(new PointerSymbol("address", new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::CHAR, {}), {})));
     symbolTableBuilder->exitScope();
 }
 
-void BuiltinFunctionLibrary::generateCode(std::unique_ptr<SymbolTableIterator> &symbolTableIterator, std::unique_ptr<InstructionSequenceBuilder> &instructionSequenceBuilder) {
+void BuiltInFunctionLibrary::insertCode(std::unique_ptr<SymbolTableIterator> &symbolTableIterator, std::unique_ptr<InstructionSequenceBuilder> &instructionSequenceBuilder) {
     ((FunctionSymbol *) (*symbolTableIterator)["scan_i64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendIn(BinaryDataType::I64);

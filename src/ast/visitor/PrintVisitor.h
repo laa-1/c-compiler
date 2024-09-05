@@ -52,4 +52,5 @@ public:
     void visit(SwitchStatement *switchStatement) override;
     void visit(WhileStatement *whileStatement) override;
     void visit(TranslationUnit *translationUnit) override;
+    static void print(TranslationUnit *translationUnit);
 };

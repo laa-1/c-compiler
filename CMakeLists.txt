@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(CC)
+project(c-compiler)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
 aux_source_directory(src SOURCES)
 
 set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 add_executable(cc
-        src/logger/Logger.cpp
-        src/logger/Logger.h
+        src/error/ErrorHandler.cpp
+        src/error/ErrorHandler.h
         src/preprocessor/Preprocessor.cpp
         src/preprocessor/Preprocessor.h
         src/lexer/Token.h
@@ -121,8 +121,8 @@ add_executable(cc
         src/constant/StringConstant.h
         src/constant/StringConstantPool.cpp
         src/constant/StringConstantPool.h
-        src/builtin/BuiltinFunctionLibrary.cpp
-        src/builtin/BuiltinFunctionLibrary.h
+        src/builtin/BuiltInFunctionLibrary.cpp
+        src/builtin/BuiltInFunctionLibrary.h
         src/ast/visitor/ErrorCheckVisitor.cpp
         src/ast/visitor/ErrorCheckVisitor.h
         src/instruction/BinaryDataType.h
@@ -138,6 +138,8 @@ add_executable(cc
         src/vm/VirtualMachine.cpp
         src/vm/VirtualMachine.h
         src/main.cpp
+        src/address/AddressCalculater.cpp
+        src/address/AddressCalculator.h
 )
 
 target_include_directories(cc PUBLIC ${PROJECT_BINARY_DIR})

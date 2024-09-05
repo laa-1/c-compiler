@@ -6,8 +6,10 @@
 #include "../visitor/Visitor.h"
 
 enum class UnaryOperator {
-    INCREMENT,
-    DECREMENT,
+    PREINCREMENT,
+    PREDECREMENT,
+    POSTINCREMENT,
+    POSTDECREMENT,
     TAKE_ADDRESS,
     DEREFERENCE,
     PLUS,
@@ -74,8 +76,8 @@ public:
     Type *resultType = nullptr; // 计算结果的类型
     bool isLvalue = false; // 计算结果是否为左值
 
+    Expression(int lineNumber, int columnNumber);
     ~Expression() override = default;
     void accept(Visitor *visitor) override;
     virtual ExpressionClass getClass() = 0;
-    virtual Expression *clone() = 0;
 };

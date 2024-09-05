@@ -6,8 +6,7 @@ class FloatingPointLiteralExpression : public Expression {
 public:
     double value;
 
-    explicit FloatingPointLiteralExpression(double value);
+    FloatingPointLiteralExpression(int lineNumber, int columnNumber, double value);
     ~FloatingPointLiteralExpression() override = default;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

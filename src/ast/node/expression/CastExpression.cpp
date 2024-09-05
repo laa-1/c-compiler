@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-CastExpression::CastExpression(Type *targetType, Expression *operand) : targetType(targetType), operand(operand) {}
+CastExpression::CastExpression(int lineNumber, int columnNumber, Type *targetType, Expression *operand) : Expression(lineNumber, columnNumber), targetType(targetType), operand(operand) {}
 
 CastExpression::~CastExpression() {
     delete targetType;
@@ -11,8 +11,4 @@ CastExpression::~CastExpression() {
 
 ExpressionClass CastExpression::getClass() {
     return ExpressionClass::CAST_EXPRESSION;
-}
-
-Expression *CastExpression::clone() {
-    return new CastExpression(targetType->clone(), operand->clone());
 }

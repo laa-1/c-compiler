@@ -8,7 +8,7 @@ public:
     int value;
     Statement *statement;
 
-    CaseStatement(int value, Statement *statement);
+    CaseStatement(int lineNumber, int columnNumber, int value, Statement *statement);
     ~CaseStatement() override;
     StatementClass getClass() override;
 };

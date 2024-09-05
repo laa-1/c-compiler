@@ -8,8 +8,7 @@ public:
     UnaryOperator unaryOperator;
     Expression *operand;
 
-    UnaryExpression(UnaryOperator unaryOperator, Expression *operand);
+    UnaryExpression(int lineNumber, int columnNumber, UnaryOperator unaryOperator, Expression *operand);
     ~UnaryExpression() override;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

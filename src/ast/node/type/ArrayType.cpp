@@ -1,7 +1,7 @@
 #include "ArrayType.h"
 #include <iostream>
 
-ArrayType::ArrayType(Type *elemType, int size) : elemType(elemType), size(size) {}
+ArrayType::ArrayType(int lineNumber, int columnNumber, Type *elemType, int size) : Type(lineNumber, columnNumber), elemType(elemType), size(size) {}
 
 ArrayType::~ArrayType() {
     delete elemType;
@@ -12,7 +12,8 @@ TypeClass ArrayType::getClass() {
 }
 
 Type *ArrayType::clone() {
-    return new ArrayType(elemType->clone(), size);
+    return new ArrayType(lineNumber, columnNumber, elemType->clone(), size);
 }
+
 
 

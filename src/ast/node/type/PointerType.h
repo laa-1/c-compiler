@@ -8,7 +8,7 @@ public:
     Type *sourceType;
     std::vector<TypeQualifier> typeQualifierList;
 
-    PointerType(Type *sourceType, const std::vector<TypeQualifier> &typeQualifierList);
+    PointerType(int lineNumber, int columnNumber, Type *sourceType, const std::vector<TypeQualifier> &typeQualifierList);
     ~PointerType() override;
     TypeClass getClass() override;
     Type *clone() override;

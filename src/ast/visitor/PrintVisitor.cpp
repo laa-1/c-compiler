@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cassert>
+#include <memory>
 #include "../node/Expression.h"
 #include "../node/Type.h"
 #include "../node/Declaration.h"
@@ -42,9 +43,13 @@
 
 std::string unaryOperator2String(const UnaryOperator &unaryOperator) {
     switch (unaryOperator) {
-        case UnaryOperator::INCREMENT:
+        case UnaryOperator::PREINCREMENT:
             return "++";
-        case UnaryOperator::DECREMENT:
+        case UnaryOperator::PREDECREMENT:
+            return "--";
+        case UnaryOperator::POSTINCREMENT:
+            return "++";
+        case UnaryOperator::POSTDECREMENT:
             return "--";
         case UnaryOperator::TAKE_ADDRESS:
             return "&";
@@ -144,6 +149,10 @@ std::string typeQualifier2String(const TypeQualifier &typeQualifier) {
     switch (typeQualifier) {
         case TypeQualifier::CONST:
             return "const";
+        case TypeQualifier::RESTRICT:
+            return "restrict";
+        case TypeQualifier::VOLATILE:
+            return "volatile";
     }
     assert(false);
 }
@@ -182,10 +191,16 @@ std::string baseType2String(const BaseType &typeSpecifier) {
 
 std::string storageSpecifier2String(const StorageSpecifier &storageSpecifier) {
     switch (storageSpecifier) {
+        case StorageSpecifier::TYPEDEF:
+            return "typedef";
         case StorageSpecifier::EXTERN:
             return "extern";
         case StorageSpecifier::STATIC:
             return "static";
+        case StorageSpecifier::AUTO:
+            return "auto";
+        case StorageSpecifier::REGISTER:
+            return "register";
     }
     assert(false);
 }
@@ -315,7 +330,7 @@ void PrintVisitor::visit(Type *type) {
 }
 
 void PrintVisitor::visit(BinaryExpression *binaryExpression) {
-    std::cout << retract << label << "BinaryExpression" << std::endl;
+    std::cout << retract << label << "BinaryExpression " << binaryExpression->lineNumber << ":" << binaryExpression->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "binaryOperator: " << binaryOperator2String(binaryExpression->binaryOperator) << std::endl;
     label = "leftOperand: ";
@@ -326,7 +341,7 @@ void PrintVisitor::visit(BinaryExpression *binaryExpression) {
 }
 
 void PrintVisitor::visit(CallExpression *callExpression) {
-    std::cout << retract << label << "CallExpression" << std::endl;
+    std::cout << retract << label << "CallExpression " << callExpression->lineNumber << ":" << callExpression->columnNumber << std::endl;
     retract += "    ";
     label = "functionAddress: ";
     visit(callExpression->functionAddress);
@@ -338,7 +353,7 @@ void PrintVisitor::visit(CallExpression *callExpression) {
 }
 
 void PrintVisitor::visit(CastExpression *castExpression) {
-    std::cout << retract << label << "CastExpression" << std::endl;
+    std::cout << retract << label << "CastExpression " << castExpression->lineNumber << ":" << castExpression->columnNumber << std::endl;
     retract += "    ";
     label = "targetType: ";
     visit(castExpression->targetType);
@@ -348,42 +363,42 @@ void PrintVisitor::visit(CastExpression *castExpression) {
 }
 
 void PrintVisitor::visit(CharacterLiteralExpression *characterLiteralExpression) {
-    std::cout << retract << label << "CharLiteralExpression" << std::endl;
+    std::cout << retract << label << "CharLiteralExpression " << characterLiteralExpression->lineNumber << ":" << characterLiteralExpression->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "value: " << characterLiteralExpression->value << std::endl;
     retract.erase(retract.size() - 4);
 }
 
 void PrintVisitor::visit(FloatingPointLiteralExpression *floatingPointLiteralExpression) {
-    std::cout << retract << label << "DoubleLiteralExpression" << std::endl;
+    std::cout << retract << label << "DoubleLiteralExpression " << floatingPointLiteralExpression->lineNumber << ":" << floatingPointLiteralExpression->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "value: " << floatingPointLiteralExpression->value << std::endl;
     retract.erase(retract.size() - 4);
 }
 
 void PrintVisitor::visit(IdentifierExpression *identifierExpression) {
-    std::cout << retract << label << "IdentifierExpression" << std::endl;
+    std::cout << retract << label << "IdentifierExpression " << identifierExpression->lineNumber << ":" << identifierExpression->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "identifier: " << identifierExpression->identifier << std::endl;
     retract.erase(retract.size() - 4);
 }
 
 void PrintVisitor::visit(IntegerLiteralExpression *integerLiteralExpression) {
-    std::cout << retract << label << "IntLiteralExpression" << std::endl;
+    std::cout << retract << label << "IntLiteralExpression " << integerLiteralExpression->lineNumber << ":" << integerLiteralExpression->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "value: " << integerLiteralExpression->value << std::endl;
     retract.erase(retract.size() - 4);
 }
 
 void PrintVisitor::visit(StringLiteralExpression *stringLiteralExpression) {
-    std::cout << retract << label << "StringLiteralExpression" << std::endl;
+    std::cout << retract << label << "StringLiteralExpression " << stringLiteralExpression->lineNumber << ":" << stringLiteralExpression->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "value: " << stringLiteralExpression->value << std::endl;
     retract.erase(retract.size() - 4);
 }
 
 void PrintVisitor::visit(TernaryExpression *ternaryExpression) {
-    std::cout << retract << label << "TernaryExpression" << std::endl;
+    std::cout << retract << label << "TernaryExpression " << ternaryExpression->lineNumber << ":" << ternaryExpression->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "ternaryOperator: " << ternaryOperator2String(ternaryExpression->ternaryOperator) << std::endl;
     label = "leftOperand: ";
@@ -396,7 +411,7 @@ void PrintVisitor::visit(TernaryExpression *ternaryExpression) {
 }
 
 void PrintVisitor::visit(UnaryExpression *unaryExpression) {
-    std::cout << retract << label << "UnaryExpression" << std::endl;
+    std::cout << retract << label << "UnaryExpression " << unaryExpression->lineNumber << ":" << unaryExpression->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << label << "unaryOperator: " << unaryOperator2String(unaryExpression->unaryOperator) << std::endl;
     label = "operand: ";
@@ -405,7 +420,7 @@ void PrintVisitor::visit(UnaryExpression *unaryExpression) {
 }
 
 void PrintVisitor::visit(ArrayType *arrayType) {
-    std::cout << retract << label << "ArrayType" << std::endl;
+    std::cout << retract << label << "ArrayType " << arrayType->lineNumber << ":" << arrayType->columnNumber << std::endl;
     retract += "    ";
     label = "elemType: ";
     visit(arrayType->elemType);
@@ -414,7 +429,7 @@ void PrintVisitor::visit(ArrayType *arrayType) {
 }
 
 void PrintVisitor::visit(FunctionType *functionType) {
-    std::cout << retract << label << "FunctionType" << std::endl;
+    std::cout << retract << label << "FunctionType " << functionType->lineNumber << ":" << functionType->columnNumber << std::endl;
     retract += "    ";
     label = "returnType: ";
     visit(functionType->returnType);
@@ -426,7 +441,7 @@ void PrintVisitor::visit(FunctionType *functionType) {
 }
 
 void PrintVisitor::visit(PointerType *pointerType) {
-    std::cout << retract << label << "PointerType" << std::endl;
+    std::cout << retract << label << "PointerType " << pointerType->lineNumber << ":" << pointerType->columnNumber << std::endl;
     retract += "    ";
     label = "sourceType: ";
     visit(pointerType->sourceType);
@@ -437,7 +452,7 @@ void PrintVisitor::visit(PointerType *pointerType) {
 }
 
 void PrintVisitor::visit(ScalarType *scalarType) {
-    std::cout << retract << label << "ScalarType" << std::endl;
+    std::cout << retract << label << "ScalarType " << scalarType->lineNumber << ":" << scalarType->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "baseType: " << baseType2String(scalarType->baseType) << std::endl;
     for (auto typeQualifier : scalarType->typeQualifierList) {
@@ -447,7 +462,7 @@ void PrintVisitor::visit(ScalarType *scalarType) {
 }
 
 void PrintVisitor::visit(FunctionDeclaration *functionDeclaration) {
-    std::cout << retract << label << "FunctionDeclaration" << std::endl;
+    std::cout << retract << label << "FunctionDeclaration " << functionDeclaration->lineNumber << ":" << functionDeclaration->columnNumber << std::endl;
     retract += "    ";
     for (auto functionSpecifier : functionDeclaration->functionSpecifierList) {
         std::cout << retract << "functionSpecifier: " << functionSpecifier2String(functionSpecifier) << std::endl;
@@ -459,7 +474,7 @@ void PrintVisitor::visit(FunctionDeclaration *functionDeclaration) {
 }
 
 void PrintVisitor::visit(FunctionDefinition *functionDefinition) {
-    std::cout << retract << label << "FunctionDefinition" << std::endl;
+    std::cout << retract << label << "FunctionDefinition " << functionDefinition->lineNumber << ":" << functionDefinition->columnNumber << std::endl;
     retract += "    ";
     for (auto functionSpecifier : functionDefinition->functionSpecifierList) {
         std::cout << retract << "functionSpecifier: " << functionSpecifier2String(functionSpecifier) << std::endl;
@@ -477,7 +492,7 @@ void PrintVisitor::visit(FunctionDefinition *functionDefinition) {
 }
 
 void PrintVisitor::visit(VariableDeclaration *variableDeclaration) {
-    std::cout << retract << label << "VariableDeclaration" << std::endl;
+    std::cout << retract << label << "VariableDeclaration " << variableDeclaration->lineNumber << ":" << variableDeclaration->columnNumber << std::endl;
     retract += "    ";
     for (auto storageSpecifier : variableDeclaration->storageSpecifierList) {
         std::cout << retract << "storageSpecifier: " << storageSpecifier2String(storageSpecifier) << std::endl;
@@ -493,11 +508,11 @@ void PrintVisitor::visit(VariableDeclaration *variableDeclaration) {
 }
 
 void PrintVisitor::visit(BreakStatement *breakStatement) {
-    std::cout << retract << label << "BreakStatement" << std::endl;
+    std::cout << retract << label << "BreakStatement " << breakStatement->lineNumber << ":" << breakStatement->columnNumber << std::endl;
 }
 
 void PrintVisitor::visit(CaseStatement *caseStatement) {
-    std::cout << retract << label << "CaseStatement" << std::endl;
+    std::cout << retract << label << "CaseStatement " << caseStatement->lineNumber << ":" << caseStatement->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "value: " << caseStatement->value << std::endl;
     label = "statement: ";
@@ -506,7 +521,7 @@ void PrintVisitor::visit(CaseStatement *caseStatement) {
 }
 
 void PrintVisitor::visit(CompoundStatement *compoundStatement) {
-    std::cout << retract << label << "CompoundStatement" << std::endl;
+    std::cout << retract << label << "CompoundStatement " << compoundStatement->lineNumber << ":" << compoundStatement->columnNumber << std::endl;
     retract += "    ";
     for (auto statement : compoundStatement->statementList) {
         label = "statement: ";
@@ -516,11 +531,11 @@ void PrintVisitor::visit(CompoundStatement *compoundStatement) {
 }
 
 void PrintVisitor::visit(ContinueStatement *continueStatement) {
-    std::cout << retract << label << "ContinueStatement" << std::endl;
+    std::cout << retract << label << "ContinueStatement " << continueStatement->lineNumber << ":" << continueStatement->columnNumber << std::endl;
 }
 
 void PrintVisitor::visit(DeclarationStatement *declarationStatement) {
-    std::cout << retract << label << "DeclarationStatement" << std::endl;
+    std::cout << retract << label << "DeclarationStatement " << declarationStatement->lineNumber << ":" << declarationStatement->columnNumber << std::endl;
     retract += "    ";
     for (auto declaration : declarationStatement->declarationList) {
         label = "declaration: ";
@@ -530,7 +545,7 @@ void PrintVisitor::visit(DeclarationStatement *declarationStatement) {
 }
 
 void PrintVisitor::visit(DefaultStatement *defaultStatement) {
-    std::cout << retract << label << "DefaultStatement" << std::endl;
+    std::cout << retract << label << "DefaultStatement " << defaultStatement->lineNumber << ":" << defaultStatement->columnNumber << std::endl;
     retract += "    ";
     label = "statement: ";
     visit(defaultStatement->statement);
@@ -538,7 +553,7 @@ void PrintVisitor::visit(DefaultStatement *defaultStatement) {
 }
 
 void PrintVisitor::visit(DoWhileStatement *doWhileStatement) {
-    std::cout << retract << label << "DoWhileStatement" << std::endl;
+    std::cout << retract << label << "DoWhileStatement " << doWhileStatement->lineNumber << ":" << doWhileStatement->columnNumber << std::endl;
     retract += "    ";
     label = "body: ";
     visit(doWhileStatement->body);
@@ -548,7 +563,7 @@ void PrintVisitor::visit(DoWhileStatement *doWhileStatement) {
 }
 
 void PrintVisitor::visit(ExpressionStatement *expressionStatement) {
-    std::cout << retract << label << "ExpressionStatement" << std::endl;
+    std::cout << retract << label << "ExpressionStatement " << expressionStatement->lineNumber << ":" << expressionStatement->columnNumber << std::endl;
     retract += "    ";
     if (expressionStatement->expression != nullptr) {
         label = "expression: ";
@@ -558,7 +573,7 @@ void PrintVisitor::visit(ExpressionStatement *expressionStatement) {
 }
 
 void PrintVisitor::visit(ForStatement *forStatement) {
-    std::cout << retract << label << "ForStatement" << std::endl;
+    std::cout << retract << label << "ForStatement " << forStatement->lineNumber << ":" << forStatement->columnNumber << std::endl;
     retract += "    ";
     for (auto initDeclaration : forStatement->declarationList) {
         label = "declaration: ";
@@ -582,14 +597,14 @@ void PrintVisitor::visit(ForStatement *forStatement) {
 }
 
 void PrintVisitor::visit(GotoStatement *gotoStatement) {
-    std::cout << retract << label << "GotoStatement" << std::endl;
+    std::cout << retract << label << "GotoStatement " << gotoStatement->lineNumber << ":" << gotoStatement->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "identifier: " << gotoStatement->identifier << std::endl;
     retract.erase(retract.size() - 4);
 }
 
 void PrintVisitor::visit(IfStatement *ifStatement) {
-    std::cout << retract << label << "IfStatement" << std::endl;
+    std::cout << retract << label << "IfStatement " << ifStatement->lineNumber << ":" << ifStatement->columnNumber << std::endl;
     retract += "    ";
     label = "condition: ";
     visit(ifStatement->condition);
@@ -603,7 +618,7 @@ void PrintVisitor::visit(IfStatement *ifStatement) {
 }
 
 void PrintVisitor::visit(LabelStatement *labelStatement) {
-    std::cout << retract << label << "LabelStatement" << std::endl;
+    std::cout << retract << label << "LabelStatement " << labelStatement->lineNumber << ":" << labelStatement->columnNumber << std::endl;
     retract += "    ";
     std::cout << retract << "identifier: " << labelStatement->identifier << std::endl;
     label = "statement: ";
@@ -612,7 +627,7 @@ void PrintVisitor::visit(LabelStatement *labelStatement) {
 }
 
 void PrintVisitor::visit(ReturnStatement *returnStatement) {
-    std::cout << retract << label << "ReturnStatement" << std::endl;
+    std::cout << retract << label << "ReturnStatement " << returnStatement->lineNumber << ":" << returnStatement->columnNumber << std::endl;
     retract += "    ";
     if (returnStatement->value != nullptr) {
         label = "value: ";
@@ -622,7 +637,7 @@ void PrintVisitor::visit(ReturnStatement *returnStatement) {
 }
 
 void PrintVisitor::visit(SwitchStatement *switchStatement) {
-    std::cout << retract << label << "SwitchStatement" << std::endl;
+    std::cout << retract << label << "SwitchStatement " << switchStatement->lineNumber << ":" << switchStatement->columnNumber << std::endl;
     retract += "    ";
     label = "expression: ";
     visit(switchStatement->expression);
@@ -632,7 +647,7 @@ void PrintVisitor::visit(SwitchStatement *switchStatement) {
 }
 
 void PrintVisitor::visit(WhileStatement *whileStatement) {
-    std::cout << retract << label << "WhileStatement" << std::endl;
+    std::cout << retract << label << "WhileStatement " << whileStatement->lineNumber << ":" << whileStatement->columnNumber << std::endl;
     retract += "    ";
     label = "condition: ";
     visit(whileStatement->condition);
@@ -642,12 +657,18 @@ void PrintVisitor::visit(WhileStatement *whileStatement) {
 }
 
 void PrintVisitor::visit(TranslationUnit *translationUnit) {
-    std::cout << retract << label << "TranslationUnit" << std::endl;
+    std::cout << retract << label << "TranslationUnit " << translationUnit->lineNumber << ":" << translationUnit->columnNumber << std::endl;
     retract += "    ";
     for (auto declaration : translationUnit->declarationList) {
         label = "declaration: ";
         visit(declaration);
     }
     retract.erase(retract.size() - 4);
+}
+
+void PrintVisitor::print(TranslationUnit *translationUnit) {
+    auto *printVisitor = new PrintVisitor();
+    translationUnit->accept(printVisitor);
+    delete printVisitor;
 }
 

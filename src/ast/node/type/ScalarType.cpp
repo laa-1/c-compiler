@@ -1,15 +1,16 @@
 #include "ScalarType.h"
 #include <iostream>
 
-ScalarType::ScalarType(BaseType baseType, const std::vector<TypeQualifier> &typeQualifierList) : baseType(baseType), typeQualifierList(typeQualifierList) {}
+ScalarType::ScalarType(int lineNumber, int columnNumber, BaseType baseType, const std::vector<TypeQualifier> &typeQualifierList) : Type(lineNumber, columnNumber), baseType(baseType), typeQualifierList(typeQualifierList) {}
 
 TypeClass ScalarType::getClass() {
     return TypeClass::SCALAR_TYPE;
 }
 
 Type *ScalarType::clone() {
-    return new ScalarType(baseType, typeQualifierList);
+    return new ScalarType(lineNumber, columnNumber, baseType, typeQualifierList);
 }
+
 
 
 

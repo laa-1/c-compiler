@@ -13,7 +13,7 @@ public:
     Expression *update; // 可以为空
     Statement *body;
 
-    ForStatement(const std::vector<Declaration *> &initDeclarationList, Expression *initExpression, Expression *condition, Expression *updateExpression, Statement *body);
+    ForStatement(int lineNumber, int columnNumber, const std::vector<Declaration *> &declarationList, Expression *init, Expression *condition, Expression *update, Statement *body);
     ~ForStatement() override;
     StatementClass getClass() override;
 };

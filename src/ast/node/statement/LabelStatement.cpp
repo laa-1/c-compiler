@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-LabelStatement::LabelStatement(std::string identifier, Statement *statement) : identifier(std::move(identifier)), statement(statement) {}
+LabelStatement::LabelStatement(int lineNumber, int columnNumber, std::string identifier, Statement *statement) : Statement(lineNumber, columnNumber), identifier(std::move(identifier)), statement(statement) {}
 
 LabelStatement::~LabelStatement() {
     delete statement;
@@ -13,4 +13,3 @@ LabelStatement::~LabelStatement() {
 StatementClass LabelStatement::getClass() {
     return StatementClass::LABEL_STATEMENT;
 }
-

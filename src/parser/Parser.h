@@ -14,12 +14,15 @@
 class Parser {
 private:
     std::vector<Token> *tokenList = nullptr;
-    int nextIndex = 0; // 下一个token的索引
-    int farthestIndex = 0; // 解析到的最远token的索引，用来检查是否全部解析完成，以及用于报告最有可能的错误位置
-    bool haveError = false;
+    TranslationUnit *translationUnit = nullptr;
+    Token token;
+    int currentIndex = 0;
+    int farthestIndex = 0;
 
 private:
-    Token getNextToken();
+    explicit Parser(std::vector<Token> *tokenList);
+    inline void nextToken();
+    inline void rollbackToken(int index);
     Expression *parsePrimaryExpression();
     Expression *parsePostfixExpression();
     Expression *parseUnaryExpression();
@@ -65,9 +68,8 @@ private:
     Declaration *parseFunctionDefinition();
     std::vector<Declaration *> parseExternalDeclaration();
     TranslationUnit *parseTranslationUnit();
+    void analysis();
 
 public:
-    explicit Parser(std::vector<Token> *tokenList);
-    TranslationUnit *analysis();
-    bool isHaveError() const;
+    static TranslationUnit *analysis(std::vector<Token> *tokenList);
 };

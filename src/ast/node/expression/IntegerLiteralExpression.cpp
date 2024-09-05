@@ -1,11 +1,8 @@
 #include "IntegerLiteralExpression.h"
 
-IntegerLiteralExpression::IntegerLiteralExpression(int value) : value(value) {}
+IntegerLiteralExpression::IntegerLiteralExpression(int lineNumber, int columnNumber, int value) : Expression(lineNumber, columnNumber), value(value) {}
 
 ExpressionClass IntegerLiteralExpression::getClass() {
     return ExpressionClass::INT_LITERAL_EXPRESSION;
 }
 
-Expression *IntegerLiteralExpression::clone() {
-    return new IntegerLiteralExpression(value);
-}

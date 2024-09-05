@@ -8,7 +8,7 @@ class DeclarationStatement : public Statement {
 public:
     std::vector<Declaration *> declarationList;
 
-    explicit DeclarationStatement(const std::vector<Declaration *> &declarationList);
+    DeclarationStatement(int lineNumber, int columnNumber, const std::vector<Declaration *> &declarationList);
     ~DeclarationStatement() override;
     StatementClass getClass() override;
 };

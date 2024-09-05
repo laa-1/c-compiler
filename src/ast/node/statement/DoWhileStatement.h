@@ -8,7 +8,7 @@ public:
     Statement *body;
     Expression *condition;
 
-    DoWhileStatement(Statement *body, Expression *condition);
+    DoWhileStatement(int lineNumber, int columnNumber, Statement *body, Expression *condition);
     ~DoWhileStatement() override;
     StatementClass getClass() override;
 };

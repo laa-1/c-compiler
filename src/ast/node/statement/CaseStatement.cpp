@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-CaseStatement::CaseStatement(int value, Statement *statement) : value(value), statement(statement) {}
+CaseStatement::CaseStatement(int lineNumber, int columnNumber, int value, Statement *statement) : Statement(lineNumber, columnNumber), value(value), statement(statement) {}
 
 CaseStatement::~CaseStatement() {
     delete statement;

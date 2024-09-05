@@ -14,7 +14,7 @@ public:
     std::vector<Declaration *> parameterDeclarationList;
     Statement *body;
 
-    FunctionDefinition(const std::vector<FunctionSpecifier> &functionSpecifierList, Type *functionType, std::string identifier, const std::vector<Declaration *> &parameterDeclarationList, Statement *body);
+    FunctionDefinition(int lineNumber, int columnNumber, const std::vector<FunctionSpecifier> &functionSpecifierList, Type *functionType, std::string identifier, const std::vector<Declaration *> &parameterDeclarationList, Statement *body);
     ~FunctionDefinition() override;
     DeclarationClass getClass() override;
 };

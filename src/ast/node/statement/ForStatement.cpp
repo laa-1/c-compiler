@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-ForStatement::ForStatement(const std::vector<Declaration *> &initDeclarationList, Expression *initExpression, Expression *condition, Expression *updateExpression, Statement *body) : declarationList(initDeclarationList), init(initExpression), condition(condition), update(updateExpression), body(body) {}
+ForStatement::ForStatement(int lineNumber, int columnNumber, const std::vector<Declaration *> &declarationList, Expression *init, Expression *condition, Expression *update, Statement *body) : Statement(lineNumber, columnNumber), declarationList(declarationList), init(init), condition(condition), update(update), body(body) {}
 
 ForStatement::~ForStatement() {
     for (auto declaration : declarationList) {

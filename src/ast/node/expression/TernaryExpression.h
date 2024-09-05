@@ -11,8 +11,7 @@ public:
     Expression *middleOperand;
     Expression *rightOperand;
 
-    TernaryExpression(TernaryOperator ternaryOperator, Expression *leftOperand, Expression *middleOperand, Expression *rightOperand);
+    TernaryExpression(int lineNumber, int columnNumber, TernaryOperator ternaryOperator, Expression *leftOperand, Expression *middleOperand, Expression *rightOperand);
     ~TernaryExpression() override;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

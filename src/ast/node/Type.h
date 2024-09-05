@@ -6,6 +6,8 @@
 
 enum class TypeQualifier {
     CONST,
+    RESTRICT,
+    VOLATILE,
 };
 
 enum class BaseType {
@@ -33,8 +35,9 @@ enum class TypeClass {
 
 class Type : public Node {
 public:
+    Type(int lineNumber, int columnNumber);
     ~Type() override = default;
     void accept(Visitor *visitor) override;
     virtual TypeClass getClass() = 0;
-    virtual Type *clone() = 0; // 克隆，深拷贝
+    virtual Type *clone() = 0;
 };

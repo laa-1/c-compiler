@@ -43,7 +43,7 @@
 #include "../../symbol/PointerSymbol.h"
 #include "../../symbol/ScalarSymbol.h"
 #include "../../symbol/StatementSymbol.h"
-#include "../../builtin/BuiltinFunctionLibrary.h"
+#include "../../builtin/BuiltInFunctionLibrary.h"
 
 int getTypeByteNum(Type *type) {
     switch (type->getClass()) {
@@ -141,7 +141,7 @@ CodeGenerateVisitor::CodeGenerateVisitor(SymbolTable *symbolTable, StringConstan
 }
 
 void CodeGenerateVisitor::patchFunctionPlaceholderAddress(const std::string& identifier, std::uint64_t realAddress) {
-    if (functionPlaceholderIndexMap.find(identifier) != functionPlaceholderIndexMap.end()) {
+    if (functionPlaceholderIndexMap.contains(identifier)) {
         for (auto instructionIndex : functionPlaceholderIndexMap[identifier]) {
             instructionSequenceBuilder->modifyPush(instructionIndex, realAddress);
         }
@@ -150,7 +150,7 @@ void CodeGenerateVisitor::patchFunctionPlaceholderAddress(const std::string& ide
 }
 
 void CodeGenerateVisitor::patchStatementPlaceholderAddress(const std::string& identifier, std::uint64_t realAddress) {
-    if (statementPlaceholderIndexMap.find(identifier) != statementPlaceholderIndexMap.end()) {
+    if (statementPlaceholderIndexMap.contains(identifier)) {
         for (auto instructionIndex : statementPlaceholderIndexMap[identifier]) {
             instructionSequenceBuilder->modifyPush(instructionIndex, realAddress);
         }
@@ -814,7 +814,7 @@ void CodeGenerateVisitor::visit(UnaryExpression *unaryExpression) {
     BinaryDataType operandBinaryDataType = type2BinaryDataType(unaryExpression->operand->resultType);
     BinaryDataType resultBinaryDataType = type2BinaryDataType(unaryExpression->resultType);
     switch (unaryExpression->unaryOperator) {
-        case UnaryOperator::INCREMENT: {
+        case UnaryOperator::PREINCREMENT: {
             int originNeedLoadValue = needLoadValue;
             needLoadValue = false;
             visit(unaryExpression->operand);
@@ -850,7 +850,7 @@ void CodeGenerateVisitor::visit(UnaryExpression *unaryExpression) {
             }
             break;
         }
-        case UnaryOperator::DECREMENT: {
+        case UnaryOperator::PREDECREMENT: {
             int originNeedLoadValue = needLoadValue;
             needLoadValue = false;
             visit(unaryExpression->operand);
@@ -884,6 +884,76 @@ void CodeGenerateVisitor::visit(UnaryExpression *unaryExpression) {
             if (originNeedLoadValue) {
                 instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
             }
+            break;
+        }
+        case UnaryOperator::POSTINCREMENT: {
+            needLoadValue = false;
+            visit(unaryExpression->operand);
+            instructionSequenceBuilder->appendCopy();
+            instructionSequenceBuilder->appendCopy();
+            instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
+            instructionSequenceBuilder->appendSwap();
+            instructionSequenceBuilder->appendCopy();
+            instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
+            if (unaryExpression->operand->resultType->getClass() == TypeClass::POINTER_TYPE) {
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) unaryExpression->operand->resultType)->sourceType)));
+            } else {
+                switch (operandBinaryDataType) {
+                    case BinaryDataType::I8:
+                    case BinaryDataType::I16:
+                    case BinaryDataType::I32:
+                    case BinaryDataType::I64:
+                        instructionSequenceBuilder->appendPush(static_cast<std::int64_t>(1));
+                        break;
+                    case BinaryDataType::U8:
+                    case BinaryDataType::U16:
+                    case BinaryDataType::U32:
+                    case BinaryDataType::U64:
+                        instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(1));
+                        break;
+                    case BinaryDataType::F32:
+                    case BinaryDataType::F64:
+                        instructionSequenceBuilder->appendPush(static_cast<double>(1));
+                        break;
+                }
+            }
+            instructionSequenceBuilder->appendAdd(operandBinaryDataType);
+            instructionSequenceBuilder->appendStore(type2BinaryDataType(unaryExpression->operand->resultType));
+            break;
+        }
+        case UnaryOperator::POSTDECREMENT: {
+            needLoadValue = false;
+            visit(unaryExpression->operand);
+            instructionSequenceBuilder->appendCopy();
+            instructionSequenceBuilder->appendCopy();
+            instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
+            instructionSequenceBuilder->appendSwap();
+            instructionSequenceBuilder->appendCopy();
+            instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
+            if (unaryExpression->operand->resultType->getClass() == TypeClass::POINTER_TYPE) {
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) unaryExpression->operand->resultType)->sourceType)));
+            } else {
+                switch (operandBinaryDataType) {
+                    case BinaryDataType::I8:
+                    case BinaryDataType::I16:
+                    case BinaryDataType::I32:
+                    case BinaryDataType::I64:
+                        instructionSequenceBuilder->appendPush(static_cast<std::int64_t>(1));
+                        break;
+                    case BinaryDataType::U8:
+                    case BinaryDataType::U16:
+                    case BinaryDataType::U32:
+                    case BinaryDataType::U64:
+                        instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(1));
+                        break;
+                    case BinaryDataType::F32:
+                    case BinaryDataType::F64:
+                        instructionSequenceBuilder->appendPush(static_cast<double>(1));
+                        break;
+                }
+            }
+            instructionSequenceBuilder->appendSub(operandBinaryDataType);
+            instructionSequenceBuilder->appendStore(type2BinaryDataType(unaryExpression->operand->resultType));
             break;
         }
         case UnaryOperator::TAKE_ADDRESS: {
@@ -942,7 +1012,7 @@ void CodeGenerateVisitor::visit(FunctionDeclaration *functionDeclaration) {
 
 void CodeGenerateVisitor::visit(FunctionDefinition *functionDefinition) {
     std::uint64_t functionAddress = instructionSequenceBuilder->getNextInstructionAddress();
-    if (functionPlaceholderIndexMap.find(functionDefinition->identifier) != functionPlaceholderIndexMap.end()) {
+    if (functionPlaceholderIndexMap.contains(functionDefinition->identifier)) {
         patchFunctionPlaceholderAddress(functionDefinition->identifier, functionAddress);
     }
     ((FunctionSymbol *) (*symbolTableIterator)[functionDefinition->identifier])->address = functionAddress;
@@ -1167,7 +1237,7 @@ void CodeGenerateVisitor::visit(IfStatement *ifStatement) {
 
 void CodeGenerateVisitor::visit(LabelStatement *labelStatement) {
     std::uint64_t statementAddress = instructionSequenceBuilder->getNextInstructionAddress();
-    if (statementPlaceholderIndexMap.find(labelStatement->identifier) != statementPlaceholderIndexMap.end()) {
+    if (statementPlaceholderIndexMap.contains(labelStatement->identifier)) {
         patchStatementPlaceholderAddress(labelStatement->identifier, statementAddress);
     }
     visit(labelStatement->statement);
@@ -1240,6 +1310,15 @@ void CodeGenerateVisitor::visit(WhileStatement *whileStatement) {
 }
 
 void CodeGenerateVisitor::visit(TranslationUnit *translationUnit) {
+    std::deque<Declaration *> declarationDeque;
+    for (auto declaration : translationUnit->declarationList) {
+        if (declaration->getClass() == DeclarationClass::FUNCTION_DEFINITION) {
+            declarationDeque.push_back(declaration);
+        } else {
+            declarationDeque.push_front(declaration);
+        }
+    }
+    translationUnit->declarationList = std::vector<Declaration *>(declarationDeque.begin(), declarationDeque.end());
     bool beginFunctionDefinition = false;
     for (auto declaration : translationUnit->declarationList) {
         if (!beginFunctionDefinition && declaration->getClass() == DeclarationClass::FUNCTION_DEFINITION) {
@@ -1248,14 +1327,18 @@ void CodeGenerateVisitor::visit(TranslationUnit *translationUnit) {
             instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(0)); // 占位地址
             instructionSequenceBuilder->appendCall();
             instructionSequenceBuilder->appendHlt();
-            BuiltinFunctionLibrary::generateCode(symbolTableIterator, instructionSequenceBuilder);
+            BuiltInFunctionLibrary::insertCode(symbolTableIterator, instructionSequenceBuilder);
         }
         visit(declaration);
     }
 }
 
-InstructionSequence *CodeGenerateVisitor::moveInstructionSequence() {
-    return instructionSequenceBuilder->build();
+InstructionSequence *CodeGenerateVisitor::generateCode(TranslationUnit *translationUnit, SymbolTable *symbolTable, StringConstantPool *stringConstantPool) {
+    auto *codeGenerateVisitor = new CodeGenerateVisitor(symbolTable, stringConstantPool);
+    translationUnit->accept(codeGenerateVisitor);
+    InstructionSequence *instructionSequence = codeGenerateVisitor->instructionSequenceBuilder->build();
+    delete codeGenerateVisitor;
+    return instructionSequence;
 }
 
 

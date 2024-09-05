@@ -74,6 +74,5 @@ public:
     void visit(SwitchStatement *switchStatement) override;
     void visit(WhileStatement *whileStatement) override;
     void visit(TranslationUnit *translationUnit) override;
-    // 转移构造好的InstructionSequence对象，不应该重复调用
-    InstructionSequence *moveInstructionSequence();
+    static InstructionSequence *generateCode(TranslationUnit *translationUnit, SymbolTable *symbolTable, StringConstantPool *stringConstantPool);
 };

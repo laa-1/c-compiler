@@ -9,6 +9,11 @@
  */
 class Node {
 public:
+    int lineNumber;
+    int columnNumber;
+
+public:
+    Node(int lineNumber, int columnNumber);
     virtual ~Node() = default;
     virtual void accept(Visitor *visitor) = 0;
 };

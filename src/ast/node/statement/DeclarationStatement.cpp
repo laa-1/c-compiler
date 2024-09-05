@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-DeclarationStatement::DeclarationStatement(const std::vector<Declaration *> &declarationList) : declarationList(declarationList) {}
+DeclarationStatement::DeclarationStatement(int lineNumber, int columnNumber, const std::vector<Declaration *> &declarationList) : Statement(lineNumber, columnNumber), declarationList(declarationList) {}
 
 DeclarationStatement::~DeclarationStatement() {
     for (auto declaration : declarationList) {

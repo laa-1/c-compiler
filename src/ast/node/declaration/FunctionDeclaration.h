@@ -12,7 +12,7 @@ public:
     Type *functionType;
     std::string identifier;
 
-    FunctionDeclaration(const std::vector<FunctionSpecifier> &functionSpecifierList, Type *functionType, std::string identifier);
+    FunctionDeclaration(int lineNumber, int columnNumber, const std::vector<FunctionSpecifier> &functionSpecifierList, Type *functionType, std::string identifier);
     ~FunctionDeclaration() override;
     DeclarationClass getClass() override;
 };

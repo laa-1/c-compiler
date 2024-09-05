@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-IfStatement::IfStatement(Expression *condition, Statement *trueBody, Statement *falseBody) : condition(condition), trueBody(trueBody), falseBody(falseBody) {}
+IfStatement::IfStatement(int lineNumber, int columnNumber, Expression *condition, Statement *trueBody, Statement *falseBody) : Statement(lineNumber, columnNumber), condition(condition), trueBody(trueBody), falseBody(falseBody) {}
 
 IfStatement::~IfStatement() {
     delete condition;
@@ -13,3 +13,4 @@ IfStatement::~IfStatement() {
 StatementClass IfStatement::getClass() {
     return StatementClass::IF_STATEMENT;
 }
+

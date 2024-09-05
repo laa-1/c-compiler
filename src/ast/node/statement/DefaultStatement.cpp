@@ -1,6 +1,6 @@
 #include "DefaultStatement.h"
 
-DefaultStatement::DefaultStatement(Statement *statement) : statement(statement) {}
+DefaultStatement::DefaultStatement(int lineNumber, int columnNumber, Statement *statement) : Statement(lineNumber, columnNumber), statement(statement) {}
 
 DefaultStatement::~DefaultStatement() {
     delete statement;

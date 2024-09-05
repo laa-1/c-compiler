@@ -7,8 +7,7 @@ class CharacterLiteralExpression : public Expression {
 public:
     char value;
 
-    explicit CharacterLiteralExpression(char value);
+    CharacterLiteralExpression(int lineNumber, int columnNumber, char value);
     ~CharacterLiteralExpression() override = default;
     ExpressionClass getClass() override;
-    Expression *clone() override;
 };

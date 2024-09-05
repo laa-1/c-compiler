@@ -2,12 +2,9 @@
 
 #include <utility>
 
-IdentifierExpression::IdentifierExpression(std::string identifier) : identifier(std::move(identifier)) {}
+IdentifierExpression::IdentifierExpression(int lineNumber, int columnNumber, const std::string &identifier) : Expression(lineNumber, columnNumber), identifier(identifier) {}
 
 ExpressionClass IdentifierExpression::getClass() {
     return ExpressionClass::IDENTIFIER_EXPRESSION;
 }
 
-Expression *IdentifierExpression::clone() {
-    return new IdentifierExpression(identifier);
-}

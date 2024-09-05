@@ -9,12 +9,14 @@
 class Preprocessor {
 private:
     std::unique_ptr<std::ifstream> file = nullptr;
+    std::vector<std::vector<char>> *charLineList = new std::vector<std::vector<char>>(1, std::vector<char>());
 
 private:
-    char matchSingleLineComment();
-    char matchMultiLineComment();
+    explicit Preprocessor(std::unique_ptr<std::ifstream> file);
+    void matchSingleLineComment(char &lastCharacter, int &countLineFeed);
+    void matchMultiLineComment(char &lastCharacter, int &countLineFeed);
+    void process();
 
 public:
-    explicit Preprocessor(std::unique_ptr<std::ifstream> file);
-    std::vector<char> *process();
+    static std::vector<std::vector<char>> *process(std::unique_ptr<std::ifstream> file);
 };

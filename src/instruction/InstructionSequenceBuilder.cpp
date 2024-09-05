@@ -21,7 +21,6 @@ void InstructionSequenceBuilder::appendAdd(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::ADD_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendSub(BinaryDataType binaryDataType) {
@@ -43,7 +42,6 @@ void InstructionSequenceBuilder::appendSub(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::SUB_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendMul(BinaryDataType binaryDataType) {
@@ -65,7 +63,6 @@ void InstructionSequenceBuilder::appendMul(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::MUL_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendDiv(BinaryDataType binaryDataType) {
@@ -87,7 +84,6 @@ void InstructionSequenceBuilder::appendDiv(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::DIV_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendMod(BinaryDataType binaryDataType) {
@@ -108,7 +104,6 @@ void InstructionSequenceBuilder::appendMod(BinaryDataType binaryDataType) {
         case BinaryDataType::F64:
             assert(false);
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendNeg(BinaryDataType binaryDataType) {
@@ -129,7 +124,6 @@ void InstructionSequenceBuilder::appendNeg(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::NEG_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendSl(BinaryDataType binaryDataType) {
@@ -150,7 +144,6 @@ void InstructionSequenceBuilder::appendSl(BinaryDataType binaryDataType) {
         case BinaryDataType::F64:
             assert(false);
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendSr(BinaryDataType binaryDataType) {
@@ -171,32 +164,26 @@ void InstructionSequenceBuilder::appendSr(BinaryDataType binaryDataType) {
         case BinaryDataType::F64:
             assert(false);
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendAnd() {
     instructionList.emplace_back(Opcode::AND_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendOr() {
     instructionList.emplace_back(Opcode::OR_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendNot() {
     instructionList.emplace_back(Opcode::NOT_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendXor() {
     instructionList.emplace_back(Opcode::XOR_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendTb() {
     instructionList.emplace_back(Opcode::TB_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendGt(BinaryDataType binaryDataType) {
@@ -218,7 +205,6 @@ void InstructionSequenceBuilder::appendGt(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::GT_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendLt(BinaryDataType binaryDataType) {
@@ -240,7 +226,6 @@ void InstructionSequenceBuilder::appendLt(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::LT_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendEq(BinaryDataType binaryDataType) {
@@ -262,7 +247,6 @@ void InstructionSequenceBuilder::appendEq(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::EQ_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendCast(BinaryDataType sourceBinaryDataType, BinaryDataType targetBinaryDataType) {
@@ -299,22 +283,18 @@ void InstructionSequenceBuilder::appendCast(BinaryDataType sourceBinaryDataType,
     } else {
         assert(false);
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendJmp() {
     instructionList.emplace_back(Opcode::JMP);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendJz() {
     instructionList.emplace_back(Opcode::JZ_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendJnz() {
     instructionList.emplace_back(Opcode::JNZ_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendLoad(BinaryDataType binaryDataType) {
@@ -350,7 +330,6 @@ void InstructionSequenceBuilder::appendLoad(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::LOAD_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendStore(BinaryDataType binaryDataType) {
@@ -386,7 +365,6 @@ void InstructionSequenceBuilder::appendStore(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::STORE_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendIn(BinaryDataType binaryDataType) {
@@ -408,12 +386,10 @@ void InstructionSequenceBuilder::appendIn(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::IN_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendIn() {
     instructionList.emplace_back(Opcode::IN_S);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendOut(BinaryDataType binaryDataType) {
@@ -435,97 +411,78 @@ void InstructionSequenceBuilder::appendOut(BinaryDataType binaryDataType) {
             instructionList.emplace_back(Opcode::OUT_F64);
             break;
     }
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendOut() {
     instructionList.emplace_back(Opcode::OUT_S);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendCall() {
     instructionList.emplace_back(Opcode::CALL);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendRet() {
     instructionList.emplace_back(Opcode::RET);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendPush(std::int8_t value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(std::int16_t value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(std::int32_t value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(std::int64_t value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(std::uint8_t value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(std::uint16_t value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(std::uint32_t value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(std::uint64_t value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(float value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPush(double value) {
     instructionList.emplace_back(Opcode::PUSH_64, value);
-    nextInstructionAddress += 10;
 }
 
 void InstructionSequenceBuilder::appendPop() {
     instructionList.emplace_back(Opcode::POP_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendCopy() {
     instructionList.emplace_back(Opcode::COPY_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendSwap() {
     instructionList.emplace_back(Opcode::SWAP_64);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendFbp() {
     instructionList.emplace_back(Opcode::FBP);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::appendHlt() {
     instructionList.emplace_back(Opcode::HLT);
-    nextInstructionAddress += 2;
 }
 
 void InstructionSequenceBuilder::modifyPush(int instructionIndex, std::int8_t value) {
@@ -577,7 +534,7 @@ int InstructionSequenceBuilder::getNextInstructionIndex() {
 }
 
 std::uint64_t InstructionSequenceBuilder::getNextInstructionAddress() const {
-    return nextInstructionAddress;
+    return instructionList.size() * 10;
 }
 
 InstructionSequence *InstructionSequenceBuilder::build() {

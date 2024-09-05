@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-CompoundStatement::CompoundStatement(const std::vector<Statement *> &statementList) : statementList(statementList) {}
+CompoundStatement::CompoundStatement(int lineNumber, int columnNumber, const std::vector<Statement *> &statementList) : Statement(lineNumber, columnNumber), statementList(statementList) {}
 
 CompoundStatement::~CompoundStatement() {
     for (auto statement : statementList) {

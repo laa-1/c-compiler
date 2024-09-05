@@ -22,10 +22,8 @@ private:
     int levelSwitch = 0;
     int levelCanBreak = 0;
     int levelCanContinue = 0;
-    bool haveError = false;
 
 public:
-    ~ErrorCheckVisitor() override;
     void visit(Declaration *declaration) override;
     void visit(Expression *expression) override;
     void visit(Statement *statement) override;
@@ -63,9 +61,5 @@ public:
     void visit(SwitchStatement *switchStatement) override;
     void visit(WhileStatement *whileStatement) override;
     void visit(TranslationUnit *translationUnit) override;
-    // 转移构造好的SymbolTable对象，不应该重复调用
-    SymbolTable *moveSymbolTable();
-    // 转移构造好的StringConstantPool对象，不应该重复调用
-    StringConstantPool *moveStringConstantPool();
-    bool isHaveError() const;
+    static void checkError(TranslationUnit *translationUnit, SymbolTable *&symbolTable, StringConstantPool *&stringConstantPool);
 };

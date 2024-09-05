@@ -9,7 +9,7 @@ public:
     Statement *trueBody;
     Statement *falseBody; // 可以为空
 
-    IfStatement(Expression *condition, Statement *trueBody, Statement *falseBody);
+    IfStatement(int lineNumber, int columnNumber, Expression *condition, Statement *trueBody, Statement *falseBody);
     ~IfStatement() override;
     StatementClass getClass() override;
 };

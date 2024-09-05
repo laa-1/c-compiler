@@ -17,7 +17,7 @@ Symbol *Scope::operator[](const std::string &identifier) {
     // 递归向上查找该标识符
     Scope *upper = this;
     while (upper != nullptr) {
-        if (upper->map.find(identifier) != upper->map.end()) {
+        if (upper->map.contains(identifier)) {
             return upper->map[identifier];
         }
         upper = upper->parent;

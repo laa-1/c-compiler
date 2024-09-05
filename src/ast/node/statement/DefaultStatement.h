@@ -8,7 +8,7 @@ class DefaultStatement : public Statement {
 public:
     Statement *statement;
 
-    explicit DefaultStatement(Statement *statement);
+    DefaultStatement(int lineNumber, int columnNumber, Statement *statement);
     ~DefaultStatement() override;
     StatementClass getClass() override;
 };

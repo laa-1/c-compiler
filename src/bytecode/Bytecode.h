@@ -13,17 +13,17 @@
  */
 class Bytecode {
 private:
-    std::map<std::uint64_t, std::uint64_t> memoryUseMap; // 每个函数的入口地址到内存使用的映射表
+    Bytecode() = default;
+    std::map<std::uint64_t, std::uint64_t> functionMemoryUseMap;
     std::vector<std::uint8_t> codeArea;
     std::vector<std::uint8_t> dataArea;
 
 public:
-    Bytecode() = default;
-    Bytecode(SymbolTable *symbolTable, StringConstantPool *stringConstantPool, InstructionSequence *instructionSequence);
-    void outputToFile(std::unique_ptr<std::ofstream> file);
-    void loadFromFile(std::unique_ptr<std::ifstream> file);
-    void outputToReadableFile(std::unique_ptr<std::ofstream> file);
+    void outputToBinaryFile(std::unique_ptr<std::ofstream> file);
+    void outputToHumanReadableFile(std::unique_ptr<std::ofstream> file);
     const std::map<std::uint64_t, std::uint64_t> &getMemoryUseMap() const;
     const std::vector<std::uint8_t> &getCodeArea() const;
     const std::vector<std::uint8_t> &getDataArea() const;
+    static Bytecode *build(SymbolTable *symbolTable, StringConstantPool *stringConstantPool, InstructionSequence *instructionSequence);
+    static Bytecode *build(std::unique_ptr<std::ifstream> file);
 };

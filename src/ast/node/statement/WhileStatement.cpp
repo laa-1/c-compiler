@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-WhileStatement::WhileStatement(Expression *condition, Statement *body) : condition(condition), body(body) {}
+WhileStatement::WhileStatement(int lineNumber, int columnNumber, Expression *condition, Statement *body) : Statement(lineNumber, columnNumber), condition(condition), body(body) {}
 
 WhileStatement::~WhileStatement() {
     delete condition;

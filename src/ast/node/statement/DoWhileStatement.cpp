@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-DoWhileStatement::DoWhileStatement(Statement *body, Expression *condition) : body(body), condition(condition) {}
+DoWhileStatement::DoWhileStatement(int lineNumber, int columnNumber, Statement *body, Expression *condition) : Statement(lineNumber, columnNumber), body(body), condition(condition) {}
 
 DoWhileStatement::~DoWhileStatement() {
     delete body;

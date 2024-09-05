@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-ExpressionStatement::ExpressionStatement(Expression *expression) : expression(expression) {}
+ExpressionStatement::ExpressionStatement(int lineNumber, int columnNumber, Expression *expression) : Statement(lineNumber, columnNumber), expression(expression) {}
 
 ExpressionStatement::~ExpressionStatement() {
     delete expression;
