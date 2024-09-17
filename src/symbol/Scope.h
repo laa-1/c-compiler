@@ -8,10 +8,6 @@
 #include <stack>
 #include "Symbol.h"
 
-/**
- * 作用域类。
- * 多个作用域会组成一个多叉树结构。
- */
 class Scope {
 public:
     std::string name; // 作用域的名称，只有函数作用域才有名称，且和函数名标识符保持一致
@@ -22,8 +18,24 @@ public:
     std::vector<Scope *> childList;
 
 public:
-    Scope(std::string name, Scope *parent);
-    ~Scope();
-    // 从当前作用域及递归向上的所有上层作用域中查找符号
-    Symbol *operator[](const std::string &identifier);
+    Scope(std::string name, Scope *parent) : name(std::move(name)), parent(parent) {}
+    ~Scope() {
+        for (const auto &pair : map) {
+            delete pair.second;
+        }
+        for (auto child : childList) {
+            delete child;
+        }
+    }
+    Symbol *operator[](const std::string &identifier) {
+        // 递归向上查找该标识符
+        Scope *upper = this;
+        while (upper != nullptr) {
+            if (upper->map.contains(identifier)) {
+                return upper->map[identifier];
+            }
+            upper = upper->parent;
+        }
+        return nullptr;
+    }
 };

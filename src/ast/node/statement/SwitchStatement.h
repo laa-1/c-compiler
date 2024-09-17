@@ -8,7 +8,14 @@ public:
     Expression *expression;
     Statement *body;
 
-    SwitchStatement(int lineNumber, int columnNumber, Expression *expression, Statement *body);
-    ~SwitchStatement() override;
-    StatementClass getClass() override;
+    SwitchStatement(int lineNumber, int columnNumber, Expression *expression, Statement *body) : Statement(lineNumber, columnNumber), expression(expression), body(body) {}
+
+    ~SwitchStatement() override {
+        delete expression;
+        delete body;
+    }
+
+    StatementClass getClass() override {
+        return StatementClass::SWITCH_STATEMENT;
+    }
 };

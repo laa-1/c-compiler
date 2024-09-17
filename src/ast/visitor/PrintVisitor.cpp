@@ -216,13 +216,13 @@ std::string functionSpecifier2String(const FunctionSpecifier &functionSpecifier)
 void PrintVisitor::visit(Declaration *declaration) {
     switch (declaration->getClass()) {
         case DeclarationClass::FUNCTION_DECLARATION:
-            visit((FunctionDeclaration *) declaration);
+            visit(reinterpret_cast<FunctionDeclaration *>(declaration));
             break;
         case DeclarationClass::FUNCTION_DEFINITION:
-            visit((FunctionDefinition *) declaration);
+            visit(reinterpret_cast<FunctionDefinition *>(declaration));
             break;
         case DeclarationClass::VARIABLE_DECLARATION:
-            visit((VariableDeclaration *) declaration);
+            visit(reinterpret_cast<VariableDeclaration *>(declaration));
             break;
     }
 }
@@ -230,34 +230,34 @@ void PrintVisitor::visit(Declaration *declaration) {
 void PrintVisitor::visit(Expression *expression) {
     switch (expression->getClass()) {
         case ExpressionClass::BINARY_EXPRESSION:
-            visit((BinaryExpression *) expression);
+            visit(reinterpret_cast<BinaryExpression *>(expression));
             break;
         case ExpressionClass::CALL_EXPRESSION:
-            visit((CallExpression *) expression);
+            visit(reinterpret_cast<CallExpression *>(expression));
             break;
         case ExpressionClass::CAST_EXPRESSION:
-            visit((CastExpression *) expression);
+            visit(reinterpret_cast<CastExpression *>(expression));
             break;
         case ExpressionClass::CHAR_LITERAL_EXPRESSION:
-            visit((CharacterLiteralExpression *) expression);
+            visit(reinterpret_cast<CharacterLiteralExpression *>(expression));
             break;
         case ExpressionClass::FLOAT_LITERAL_EXPRESSION:
-            visit((FloatingPointLiteralExpression *) expression);
+            visit(reinterpret_cast<FloatingPointLiteralExpression *>(expression));
             break;
         case ExpressionClass::IDENTIFIER_EXPRESSION:
-            visit((IdentifierExpression *) expression);
+            visit(reinterpret_cast<IdentifierExpression *>(expression));
             break;
         case ExpressionClass::INT_LITERAL_EXPRESSION:
-            visit((IntegerLiteralExpression *) expression);
+            visit(reinterpret_cast<IntegerLiteralExpression *>(expression));
             break;
         case ExpressionClass::STRING_LITERAL_EXPRESSION:
-            visit((StringLiteralExpression *) expression);
+            visit(reinterpret_cast<StringLiteralExpression *>(expression));
             break;
         case ExpressionClass::TERNARY_EXPRESSION:
-            visit((TernaryExpression *) expression);
+            visit(reinterpret_cast<TernaryExpression *>(expression));
             break;
         case ExpressionClass::UNARY_EXPRESSION:
-            visit((UnaryExpression *) expression);
+            visit(reinterpret_cast<UnaryExpression *>(expression));
             break;
     }
 }
@@ -265,49 +265,49 @@ void PrintVisitor::visit(Expression *expression) {
 void PrintVisitor::visit(Statement *statement) {
     switch (statement->getClass()) {
         case StatementClass::BREAK_STATEMENT:
-            visit((BreakStatement *) statement);
+            visit(reinterpret_cast<BreakStatement *>(statement));
             break;
         case StatementClass::CASE_STATEMENT:
-            visit((CaseStatement *) statement);
+            visit(reinterpret_cast<CaseStatement *>(statement));
             break;
         case StatementClass::COMPOUND_STATEMENT:
-            visit((CompoundStatement *) statement);
+            visit(reinterpret_cast<CompoundStatement *>(statement));
             break;
         case StatementClass::CONTINUE_STATEMENT:
-            visit((ContinueStatement *) statement);
+            visit(reinterpret_cast<ContinueStatement *>(statement));
             break;
         case StatementClass::DECLARATION_STATEMENT:
-            visit((DeclarationStatement *) statement);
+            visit(reinterpret_cast<DeclarationStatement *>(statement));
             break;
         case StatementClass::DEFAULT_STATEMENT:
-            visit((DefaultStatement *) statement);
+            visit(reinterpret_cast<DefaultStatement *>(statement));
             break;
         case StatementClass::DO_WHILE_STATEMENT:
-            visit((DoWhileStatement *) statement);
+            visit(reinterpret_cast<DoWhileStatement *>(statement));
             break;
         case StatementClass::EXPRESSION_STATEMENT:
-            visit((ExpressionStatement *) statement);
+            visit(reinterpret_cast<ExpressionStatement *>(statement));
             break;
         case StatementClass::FOR_STATEMENT:
-            visit((ForStatement *) statement);
+            visit(reinterpret_cast<ForStatement *>(statement));
             break;
         case StatementClass::GOTO_STATEMENT:
-            visit((GotoStatement *) statement);
+            visit(reinterpret_cast<GotoStatement *>(statement));
             break;
         case StatementClass::IF_STATEMENT:
-            visit((IfStatement *) statement);
+            visit(reinterpret_cast<IfStatement *>(statement));
             break;
         case StatementClass::LABEL_STATEMENT:
-            visit((LabelStatement *) statement);
+            visit(reinterpret_cast<LabelStatement *>(statement));
             break;
         case StatementClass::RETURN_STATEMENT:
-            visit((ReturnStatement *) statement);
+            visit(reinterpret_cast<ReturnStatement *>(statement));
             break;
         case StatementClass::SWITCH_STATEMENT:
-            visit((SwitchStatement *) statement);
+            visit(reinterpret_cast<SwitchStatement *>(statement));
             break;
         case StatementClass::WHILE_STATEMENT:
-            visit((WhileStatement *) statement);
+            visit(reinterpret_cast<WhileStatement *>(statement));
             break;
     }
 }
@@ -315,16 +315,16 @@ void PrintVisitor::visit(Statement *statement) {
 void PrintVisitor::visit(Type *type) {
     switch (type->getClass()) {
         case TypeClass::ARRAY_TYPE:
-            visit((ArrayType *) type);
+            visit(reinterpret_cast<ArrayType *>(type));
             break;
         case TypeClass::FUNCTION_TYPE:
-            visit((FunctionType *) type);
+            visit(reinterpret_cast<FunctionType *>(type));
             break;
         case TypeClass::POINTER_TYPE:
-            visit((PointerType *) type);
+            visit(reinterpret_cast<PointerType *>(type));
             break;
         case TypeClass::SCALAR_TYPE:
-            visit((ScalarType *) type);
+            visit(reinterpret_cast<ScalarType *>(type));
             break;
     }
 }

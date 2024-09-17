@@ -1,5 +1,5 @@
-/.idea/
-/cmake-build-debug-mingw/
-/cmake-build-release-mingw/
-/test/
-/参考资料/
+.idea/
+cmake-build-debug-mingw/
+cmake-build-release-mingw/
+test/
+参考资料/

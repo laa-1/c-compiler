@@ -76,8 +76,13 @@ public:
     Type *resultType = nullptr; // 计算结果的类型
     bool isLvalue = false; // 计算结果是否为左值
 
-    Expression(int lineNumber, int columnNumber);
+    Expression(int lineNumber, int columnNumber) : Node(lineNumber, columnNumber) {}
+
     ~Expression() override = default;
-    void accept(Visitor *visitor) override;
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+
     virtual ExpressionClass getClass() = 0;
 };

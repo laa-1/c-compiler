@@ -9,8 +9,17 @@ public:
     Type *elemType;
     int size;
 
-    ArrayType(int lineNumber, int columnNumber, Type *elemType, int size);
-    ~ArrayType() override;
-    TypeClass getClass() override;
-    Type *clone() override;
+    ArrayType(int lineNumber, int columnNumber, Type *elemType, int size) : Type(lineNumber, columnNumber), elemType(elemType), size(size) {}
+
+    ~ArrayType() override {
+        delete elemType;
+    }
+
+    TypeClass getClass() override {
+        return TypeClass::ARRAY_TYPE;
+    }
+
+    Type *clone() override {
+        return new ArrayType(lineNumber, columnNumber, elemType->clone(), size);
+    }
 };

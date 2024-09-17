@@ -16,81 +16,43 @@ add_executable(cc
         src/lexer/Token.h
         src/lexer/Lexer.cpp
         src/lexer/Lexer.h
-        src/ast/node/Node.cpp
         src/ast/node/Node.h
-        src/ast/node/Expression.cpp
         src/ast/node/Expression.h
-        src/ast/node/Type.cpp
         src/ast/node/Type.h
-        src/ast/node/Declaration.cpp
         src/ast/node/Declaration.h
-        src/ast/node/Statement.cpp
         src/ast/node/Statement.h
-        src/ast/node/TranslationUnit.cpp
         src/ast/node/TranslationUnit.h
-        src/ast/node/expression/BinaryExpression.cpp
         src/ast/node/expression/BinaryExpression.h
-        src/ast/node/expression/CallExpression.cpp
         src/ast/node/expression/CallExpression.h
-        src/ast/node/expression/CastExpression.cpp
         src/ast/node/expression/CastExpression.h
-        src/ast/node/expression/CharacterLiteralExpression.cpp
         src/ast/node/expression/CharacterLiteralExpression.h
-        src/ast/node/expression/FloatingPointLiteralExpression.cpp
         src/ast/node/expression/FloatingPointLiteralExpression.h
-        src/ast/node/expression/IdentifierExpression.cpp
         src/ast/node/expression/IdentifierExpression.h
-        src/ast/node/expression/IntegerLiteralExpression.cpp
         src/ast/node/expression/IntegerLiteralExpression.h
-        src/ast/node/expression/StringLiteralExpression.cpp
         src/ast/node/expression/StringLiteralExpression.h
-        src/ast/node/expression/TernaryExpression.cpp
         src/ast/node/expression/TernaryExpression.h
-        src/ast/node/expression/UnaryExpression.cpp
         src/ast/node/expression/UnaryExpression.h
-        src/ast/node/type/ScalarType.cpp
         src/ast/node/type/ScalarType.h
-        src/ast/node/type/ArrayType.cpp
         src/ast/node/type/ArrayType.h
-        src/ast/node/type/FunctionType.cpp
         src/ast/node/type/FunctionType.h
-        src/ast/node/type/PointerType.cpp
         src/ast/node/type/PointerType.h
-        src/ast/node/declaration/FunctionDeclaration.cpp
         src/ast/node/declaration/FunctionDeclaration.h
-        src/ast/node/declaration/FunctionDefinition.cpp
         src/ast/node/declaration/FunctionDefinition.h
-        src/ast/node/declaration/VariableDeclaration.cpp
         src/ast/node/declaration/VariableDeclaration.h
-        src/ast/node/statement/BreakStatement.cpp
         src/ast/node/statement/BreakStatement.h
-        src/ast/node/statement/CaseStatement.cpp
         src/ast/node/statement/CaseStatement.h
-        src/ast/node/statement/CompoundStatement.cpp
         src/ast/node/statement/CompoundStatement.h
-        src/ast/node/statement/ContinueStatement.cpp
         src/ast/node/statement/ContinueStatement.h
-        src/ast/node/statement/DeclarationStatement.cpp
         src/ast/node/statement/DeclarationStatement.h
-        src/ast/node/statement/DefaultStatement.cpp
         src/ast/node/statement/DefaultStatement.h
-        src/ast/node/statement/DoWhileStatement.cpp
         src/ast/node/statement/DoWhileStatement.h
-        src/ast/node/statement/ExpressionStatement.cpp
         src/ast/node/statement/ExpressionStatement.h
-        src/ast/node/statement/ForStatement.cpp
         src/ast/node/statement/ForStatement.h
-        src/ast/node/statement/GotoStatement.cpp
         src/ast/node/statement/GotoStatement.h
-        src/ast/node/statement/IfStatement.cpp
         src/ast/node/statement/IfStatement.h
-        src/ast/node/statement/LabelStatement.cpp
         src/ast/node/statement/LabelStatement.h
-        src/ast/node/statement/ReturnStatement.cpp
         src/ast/node/statement/ReturnStatement.h
-        src/ast/node/statement/SwitchStatement.cpp
         src/ast/node/statement/SwitchStatement.h
-        src/ast/node/statement/WhileStatement.cpp
         src/ast/node/statement/WhileStatement.h
         src/parser/Parser.cpp
         src/parser/Parser.h
@@ -98,19 +60,12 @@ add_executable(cc
         src/ast/visitor/Visitor.h
         src/ast/visitor/PrintVisitor.cpp
         src/ast/visitor/PrintVisitor.h
-        src/symbol/Symbol.cpp
         src/symbol/Symbol.h
-        src/symbol/ScalarSymbol.cpp
         src/symbol/ScalarSymbol.h
-        src/symbol/PointerSymbol.cpp
         src/symbol/PointerSymbol.h
-        src/symbol/ArraySymbol.cpp
         src/symbol/ArraySymbol.h
-        src/symbol/FunctionSymbol.cpp
         src/symbol/FunctionSymbol.h
-        src/symbol/StatementSymbol.cpp
         src/symbol/StatementSymbol.h
-        src/symbol/Scope.cpp
         src/symbol/Scope.h
         src/symbol/SymbolTable.cpp
         src/symbol/SymbolTable.h
@@ -121,8 +76,8 @@ add_executable(cc
         src/constant/StringConstant.h
         src/constant/StringConstantPool.cpp
         src/constant/StringConstantPool.h
-        src/builtin/BuiltInFunctionLibrary.cpp
-        src/builtin/BuiltInFunctionLibrary.h
+        src/builtin/BuiltInFunctionInserter.cpp
+        src/builtin/BuiltInFunctionInserter.h
         src/ast/visitor/ErrorCheckVisitor.cpp
         src/ast/visitor/ErrorCheckVisitor.h
         src/instruction/BinaryDataType.h
@@ -138,7 +93,7 @@ add_executable(cc
         src/vm/VirtualMachine.cpp
         src/vm/VirtualMachine.h
         src/main.cpp
-        src/address/AddressCalculater.cpp
+        src/address/AddressCalculator.cpp
         src/address/AddressCalculator.h
 )
 

@@ -11,7 +11,11 @@ public:
     PointerType *type = nullptr;
     std::uint64_t address = 0;
 
-    PointerSymbol(const std::string &identifier, PointerType *type);
+    PointerSymbol(const std::string &identifier, PointerType *type) : Symbol(identifier), type(type) {}
+
     ~PointerSymbol() override = default;
-    SymbolClass getClass() override;
+
+    SymbolClass getClass() override {
+        return SymbolClass::POINTER_SYMBOL;
+    }
 };

@@ -25,6 +25,6 @@ public:
     void calculateAddress(std::uint64_t start);
     bool checkGlobal(const std::string &identifier);
     std::map<std::uint64_t, std::uint64_t> createFunctionMemoryUseMap();
-    std::uint64_t getStartAddress() const;
-    std::uint64_t getMemoryUseRootScope() const;
+    [[nodiscard]] std::uint64_t getStartAddress() const;
+    [[nodiscard]] std::uint64_t getMemoryUseRootScope() const;
 };

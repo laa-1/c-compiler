@@ -9,7 +9,7 @@
 class Preprocessor {
 private:
     std::unique_ptr<std::ifstream> file = nullptr;
-    std::vector<std::vector<char>> *charLineList = new std::vector<std::vector<char>>(1, std::vector<char>());
+    std::vector<std::vector<char>> *charLineList = new std::vector<std::vector<char>>({{}});
 
 private:
     explicit Preprocessor(std::unique_ptr<std::ifstream> file);

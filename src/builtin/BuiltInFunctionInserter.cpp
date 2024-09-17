@@ -1,10 +1,10 @@
-#include "BuiltInFunctionLibrary.h"
+#include "BuiltInFunctionInserter.h"
 
 #include "../symbol/ScalarSymbol.h"
 #include "../symbol/PointerSymbol.h"
 
 
-void BuiltInFunctionLibrary::insertSymbol(std::unique_ptr<SymbolTableBuilder> &symbolTableBuilder) {
+void BuiltInFunctionInserter::insertSymbol(std::unique_ptr<SymbolTableBuilder> &symbolTableBuilder) {
     std::vector<FunctionDeclaration *> functionDeclarationList;
     symbolTableBuilder->insertSymbol(new FunctionSymbol("scan_i64", new FunctionType(-1, -1, new ScalarType(-1, -1, BaseType::VOID, {}), {new PointerType(-1, -1, new ScalarType(-1, -1, BaseType::LONG_LONG_INT, {}), {})})));
     symbolTableBuilder->createScope("scan_i64");
@@ -40,43 +40,43 @@ void BuiltInFunctionLibrary::insertSymbol(std::unique_ptr<SymbolTableBuilder> &s
     symbolTableBuilder->exitScope();
 }
 
-void BuiltInFunctionLibrary::insertCode(std::unique_ptr<SymbolTableIterator> &symbolTableIterator, std::unique_ptr<InstructionSequenceBuilder> &instructionSequenceBuilder) {
-    ((FunctionSymbol *) (*symbolTableIterator)["scan_i64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
+void BuiltInFunctionInserter::insertCode(std::unique_ptr<SymbolTableIterator> &symbolTableIterator, std::unique_ptr<InstructionSequenceBuilder> &instructionSequenceBuilder) {
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)["scan_i64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendIn(BinaryDataType::I64);
     instructionSequenceBuilder->appendRet();
     symbolTableIterator->switchScope();
-    ((FunctionSymbol *) (*symbolTableIterator)["scan_u64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)["scan_u64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendIn(BinaryDataType::U64);
     instructionSequenceBuilder->appendRet();
     symbolTableIterator->switchScope();
-    ((FunctionSymbol *) (*symbolTableIterator)["scan_f64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)["scan_f64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendIn(BinaryDataType::F64);
     instructionSequenceBuilder->appendRet();
     symbolTableIterator->switchScope();
-    ((FunctionSymbol *) (*symbolTableIterator)["scan_s"])->address = instructionSequenceBuilder->getNextInstructionAddress();
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)["scan_s"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendIn();
     instructionSequenceBuilder->appendRet();
     symbolTableIterator->switchScope();
-    ((FunctionSymbol *) (*symbolTableIterator)["print_i64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)["print_i64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendOut(BinaryDataType::I64);
     instructionSequenceBuilder->appendRet();
     symbolTableIterator->switchScope();
-    ((FunctionSymbol *) (*symbolTableIterator)["print_u64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)["print_u64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendOut(BinaryDataType::U64);
     instructionSequenceBuilder->appendRet();
     symbolTableIterator->switchScope();
-    ((FunctionSymbol *) (*symbolTableIterator)["print_f64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)["print_f64"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendOut(BinaryDataType::F64);
     instructionSequenceBuilder->appendRet();
     symbolTableIterator->switchScope();
-    ((FunctionSymbol *) (*symbolTableIterator)["print_s"])->address = instructionSequenceBuilder->getNextInstructionAddress();
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)["print_s"])->address = instructionSequenceBuilder->getNextInstructionAddress();
     symbolTableIterator->switchScope();
     instructionSequenceBuilder->appendOut();
     instructionSequenceBuilder->appendRet();

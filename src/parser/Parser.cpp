@@ -76,19 +76,19 @@ Type *typeStack2Type(int lineNumber, int columnNumber, const std::vector<TypeQua
     while (!typeStack.empty()) {
         switch (typeStack.top()->getClass()) {
             case TypeClass::ARRAY_TYPE: {
-                auto *newType = (ArrayType *) typeStack.top();
+                auto *newType = reinterpret_cast<ArrayType *>(typeStack.top());
                 newType->elemType = finalType;
                 finalType = newType;
                 break;
             }
             case TypeClass::FUNCTION_TYPE: {
-                auto *newType = (FunctionType *) typeStack.top();
+                auto *newType = reinterpret_cast<FunctionType *>(typeStack.top());
                 newType->returnType = finalType;
                 finalType = newType;
                 break;
             }
             case TypeClass::POINTER_TYPE: {
-                auto *newType = (PointerType *) typeStack.top();
+                auto *newType = reinterpret_cast<PointerType *>(typeStack.top());
                 newType->sourceType = finalType;
                 finalType = newType;
                 break;
@@ -1376,7 +1376,7 @@ std::vector<Declaration *> Parser::parseDeclaration() {
                 switch (finalType->getClass()) {
                     case TypeClass::ARRAY_TYPE:
                         if (initialValueListList[i].size() == 1 && initialValueListList[i][0]->getClass() == ExpressionClass::STRING_LITERAL_EXPRESSION) {
-                            std::string initialValue = ((StringLiteralExpression *) initialValueListList[i][0])->value;
+                            std::string initialValue = reinterpret_cast<StringLiteralExpression *>(initialValueListList[i][0])->value;
                             initialValue.push_back('\0');
                             deleteAndClearAllElem(initialValueListList[i]);
                             for (char ch : initialValue) {
@@ -1797,8 +1797,8 @@ Declaration *Parser::parseFunctionDefinition() {
     if (parsePointerDeclarator(identifierList, typeStack)) {
         Type *finalType = typeStack2Type(lineNumber, columnNumber, typeQualifierList, typeSpecifier, typeStack);
         if (finalType->getClass() == TypeClass::FUNCTION_TYPE) {
-            std::vector<Type *> parameterTypeList = ((FunctionType *) finalType)->parameterTypeList;
-            std::vector<std::string> parameterIdentifierList(identifierList.begin() + 1, identifierList.begin() + 1 + (int) (((FunctionType *) finalType)->parameterTypeList.size()));
+            std::vector<Type *> parameterTypeList = reinterpret_cast<FunctionType *>(finalType)->parameterTypeList;
+            std::vector<std::string> parameterIdentifierList(identifierList.begin() + 1, identifierList.begin() + 1 + static_cast<int>(reinterpret_cast<FunctionType *>(finalType)->parameterTypeList.size()));
             if (parameterTypeList.size() == parameterIdentifierList.size()) {
                 if (!haveEmptyString(parameterIdentifierList)) {
                     Statement *body = parseCompoundStatement();

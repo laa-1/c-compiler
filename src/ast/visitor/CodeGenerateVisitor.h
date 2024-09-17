@@ -10,11 +10,6 @@
 #include "../../instruction/InstructionSequenceBuilder.h"
 #include "../../instruction/BinaryDataType.h"
 
-/**
- * 用于对AST进行代码生成的visitor具体子类。
- * 使用时应当只调用TranslationUnit的visit函数。
- * 不应该复用同一个对象。
- */
 class CodeGenerateVisitor : public Visitor {
 private:
     SymbolTable *symbolTable = nullptr;
@@ -27,7 +22,7 @@ private:
     std::stack<std::vector<int>> breakPushIndexListStack; // 用于记录多个break语句中压入占位地址的push指令的索引，需要后续修改
     std::stack<std::vector<int>> continuePushIndexListStack; // 用于记录多个continue语句中压入占位地址的push指令的索引，需要后续修改（do-while循环使用）
     std::stack<std::uint64_t> continueJumpAddressStack; // 用于记录在continue的语句可以跳转的地址（while和for循环使用）
-    bool needLoadValue = false;
+    bool needLoadValue = false; // 用于表示表达式的visit函数的调用者是否需要取值（前提是表达式返回的是左值）
 
 private:
     void patchFunctionPlaceholderAddress(const std::string& identifier, std::uint64_t realAddress);

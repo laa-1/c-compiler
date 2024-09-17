@@ -46,7 +46,7 @@
 #include "../../symbol/StatementSymbol.h"
 #include "../../symbol/ScalarSymbol.h"
 #include "../../error/ErrorHandler.h"
-#include "../../builtin/BuiltInFunctionLibrary.h"
+#include "../../builtin/BuiltInFunctionInserter.h"
 
 bool isScalarType(Type *type) {
     return type->getClass() == TypeClass::SCALAR_TYPE;
@@ -65,27 +65,27 @@ bool isFunctionType(Type *type) {
 }
 
 bool isVoidScalarType(Type *type) {
-    return type->getClass() == TypeClass::SCALAR_TYPE && ((ScalarType *) type)->baseType == BaseType::VOID;
+    return type->getClass() == TypeClass::SCALAR_TYPE && reinterpret_cast<ScalarType *>(type)->baseType == BaseType::VOID;
 }
 
 bool isVoidArrayType(Type *type) {
-    return type->getClass() == TypeClass::ARRAY_TYPE && ((ArrayType *) type)->elemType->getClass() == TypeClass::SCALAR_TYPE && ((ScalarType *) ((ArrayType *) type)->elemType)->baseType == BaseType::VOID;
+    return type->getClass() == TypeClass::ARRAY_TYPE && reinterpret_cast<ArrayType *>(type)->elemType->getClass() == TypeClass::SCALAR_TYPE && reinterpret_cast<ScalarType *>(reinterpret_cast<ArrayType *>(type)->elemType)->baseType == BaseType::VOID;
 }
 
 bool isVoidPointerType(Type *type) {
-    return type->getClass() == TypeClass::POINTER_TYPE && ((PointerType *) type)->sourceType->getClass() == TypeClass::SCALAR_TYPE && ((ScalarType *) ((PointerType *) type)->sourceType)->baseType == BaseType::VOID;
+    return type->getClass() == TypeClass::POINTER_TYPE && reinterpret_cast<PointerType *>(type)->sourceType->getClass() == TypeClass::SCALAR_TYPE && reinterpret_cast<ScalarType *>(reinterpret_cast<PointerType *>(type)->sourceType)->baseType == BaseType::VOID;
 }
 
 bool isVoidFunctionType(Type *type) {
-    return type->getClass() == TypeClass::FUNCTION_TYPE && ((FunctionType *) type)->returnType->getClass() == TypeClass::SCALAR_TYPE && ((ScalarType *) ((FunctionType *) type)->returnType)->baseType == BaseType::VOID;
+    return type->getClass() == TypeClass::FUNCTION_TYPE && reinterpret_cast<FunctionType *>(type)->returnType->getClass() == TypeClass::SCALAR_TYPE && reinterpret_cast<ScalarType *>(reinterpret_cast<FunctionType *>(type)->returnType)->baseType == BaseType::VOID;
 }
 
 bool isIntegerScalarType(Type *type) {
-    return type->getClass() == TypeClass::SCALAR_TYPE && ((ScalarType *) type)->baseType != BaseType::VOID && ((ScalarType *) type)->baseType != BaseType::FLOAT && ((ScalarType *) type)->baseType != BaseType::DOUBLE;
+    return type->getClass() == TypeClass::SCALAR_TYPE && reinterpret_cast<ScalarType *>(type)->baseType != BaseType::VOID && reinterpret_cast<ScalarType *>(type)->baseType != BaseType::FLOAT && reinterpret_cast<ScalarType *>(type)->baseType != BaseType::DOUBLE;
 }
 
 bool isCharPointerType(Type *type) {
-    return type->getClass() == TypeClass::POINTER_TYPE && ((PointerType *) type)->sourceType->getClass() == TypeClass::SCALAR_TYPE && ((ScalarType *) ((PointerType *) type)->sourceType)->baseType == BaseType::CHAR;
+    return type->getClass() == TypeClass::POINTER_TYPE && reinterpret_cast<PointerType *>(type)->sourceType->getClass() == TypeClass::SCALAR_TYPE && reinterpret_cast<ScalarType *>(reinterpret_cast<PointerType *>(type)->sourceType)->baseType == BaseType::CHAR;
 }
 
 bool isSameType(Type *type1, Type *type2) {
@@ -94,8 +94,8 @@ bool isSameType(Type *type1, Type *type2) {
     }
     switch (type1->getClass()) {
         case TypeClass::ARRAY_TYPE: {
-            auto *arrayType1 = (ArrayType *) type1;
-            auto *arrayType2 = (ArrayType *) type2;
+            auto *arrayType1 = reinterpret_cast<ArrayType *>(type1);
+            auto *arrayType2 = reinterpret_cast<ArrayType *>(type2);
             if (!isSameType(arrayType1->elemType, arrayType2->elemType)) {
                 return false;
             }
@@ -105,16 +105,16 @@ bool isSameType(Type *type1, Type *type2) {
             return true;
         }
         case TypeClass::SCALAR_TYPE: {
-            auto *scalarType1 = (ScalarType *) type1;
-            auto *scalarType2 = (ScalarType *) type2;
+            auto *scalarType1 = reinterpret_cast<ScalarType *>(type1);
+            auto *scalarType2 = reinterpret_cast<ScalarType *>(type2);
             if (scalarType1->baseType != scalarType2->baseType) {
                 return false;
             }
             return true;
         }
         case TypeClass::FUNCTION_TYPE: {
-            auto *functionType1 = (FunctionType *) type1;
-            auto *functionType2 = (FunctionType *) type2;
+            auto *functionType1 = reinterpret_cast<FunctionType *>(type1);
+            auto *functionType2 = reinterpret_cast<FunctionType *>(type2);
             if (!isSameType(functionType1->returnType, functionType2->returnType)) {
                 return false;
             }
@@ -129,8 +129,8 @@ bool isSameType(Type *type1, Type *type2) {
             return true;
         }
         case TypeClass::POINTER_TYPE: {
-            auto *pointerType1 = (PointerType *) type1;
-            auto *pointerType2 = (PointerType *) type2;
+            auto *pointerType1 = reinterpret_cast<PointerType *>(type1);
+            auto *pointerType2 = reinterpret_cast<PointerType *>(type2);
             if (!isSameType(pointerType1->sourceType, pointerType2->sourceType)) {
                 return false;
             }
@@ -149,7 +149,7 @@ int getTypeImplicitCastPriority(Type *type) {
         case TypeClass::POINTER_TYPE:
             return 11;
         case TypeClass::SCALAR_TYPE:
-            switch (((ScalarType *) type)->baseType) {
+            switch (reinterpret_cast<ScalarType *>(type)->baseType) {
                 case BaseType::VOID:
                     assert(false);
                 case BaseType::CHAR:
@@ -185,30 +185,30 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
     }
     switch (sourceType->getClass()) {
         case TypeClass::ARRAY_TYPE:
-            return isPointerType(targetType) && isSameType(((ArrayType *) sourceType)->elemType, ((PointerType *) targetType)->sourceType);
+            return isPointerType(targetType) && isSameType(reinterpret_cast<ArrayType *>(sourceType)->elemType, reinterpret_cast<PointerType *>(targetType)->sourceType);
         case TypeClass::FUNCTION_TYPE:
-            return isPointerType(targetType) && isSameType(sourceType, ((PointerType *) targetType)->sourceType);
+            return isPointerType(targetType) && isSameType(sourceType, reinterpret_cast<PointerType *>(targetType)->sourceType);
         case TypeClass::POINTER_TYPE:
             return isVoidPointerType(targetType);
         case TypeClass::SCALAR_TYPE:
-            switch (((ScalarType *) sourceType)->baseType) {
+            switch (reinterpret_cast<ScalarType *>(sourceType)->baseType) {
                 case BaseType::VOID:
                     return false;
                 case BaseType::CHAR:
                     if (isPointerType(targetType) || isArrayType(targetType)) {
                         return true;
                     } else if (isScalarType(targetType)) {
-                        return ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_CHAR ||
-                               ((ScalarType *) targetType)->baseType == BaseType::SHORT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_SHORT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::FLOAT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                        return reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_CHAR ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::SHORT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_SHORT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::FLOAT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                     } else {
                         return false;
                     }
@@ -216,15 +216,15 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
                     if (isPointerType(targetType) || isArrayType(targetType)) {
                         return true;
                     } else if (isScalarType(targetType)) {
-                        return ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_SHORT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::FLOAT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                        return reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_SHORT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::FLOAT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                     } else {
                         return false;
                     }
@@ -233,12 +233,12 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
                     if (isPointerType(targetType) || isArrayType(targetType)) {
                         return true;
                     } else if (isScalarType(targetType)) {
-                        return ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::FLOAT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                        return reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::FLOAT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                     } else {
                         return false;
                     }
@@ -246,9 +246,9 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
                     if (isPointerType(targetType) || isArrayType(targetType)) {
                         return true;
                     } else if (isScalarType(targetType)) {
-                        return ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::FLOAT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                        return reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::FLOAT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                     } else {
                         return false;
                     }
@@ -256,16 +256,16 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
                     if (isPointerType(targetType) || isArrayType(targetType)) {
                         return true;
                     } else if (isScalarType(targetType)) {
-                        return ((ScalarType *) targetType)->baseType == BaseType::SHORT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_SHORT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::FLOAT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                        return reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::SHORT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_SHORT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::FLOAT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                     } else {
                         return false;
                     }
@@ -273,14 +273,14 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
                     if (isPointerType(targetType) || isArrayType(targetType)) {
                         return true;
                     } else if (isScalarType(targetType)) {
-                        return ((ScalarType *) targetType)->baseType == BaseType::INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::FLOAT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                        return reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::FLOAT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                     } else {
                         return false;
                     }
@@ -289,10 +289,10 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
                     if (isPointerType(targetType) || isArrayType(targetType)) {
                         return true;
                     } else if (isScalarType(targetType)) {
-                        return ((ScalarType *) targetType)->baseType == BaseType::LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::FLOAT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                        return reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::UNSIGNED_LONG_LONG_INT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::FLOAT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                     } else {
                         return false;
                     }
@@ -300,13 +300,13 @@ bool canImplicitCastOneWay(Type *sourceType, Type *targetType) {
                     if (isPointerType(targetType) || isArrayType(targetType)) {
                         return true;
                     } else if (isScalarType(targetType)) {
-                        return ((ScalarType *) targetType)->baseType == BaseType::FLOAT ||
-                               ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                        return reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::FLOAT ||
+                               reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                     } else {
                         return false;
                     }
                 case BaseType::FLOAT:
-                    return isScalarType(targetType) && ((ScalarType *) targetType)->baseType == BaseType::DOUBLE;
+                    return isScalarType(targetType) && reinterpret_cast<ScalarType *>(targetType)->baseType == BaseType::DOUBLE;
                 case BaseType::DOUBLE:
                     return false;
             }
@@ -333,12 +333,12 @@ Type *implicitCastTwoWay(Type *type1, Type *type2) {
 
 bool haveConstTypeQualifier(Type *type) {
     if (type->getClass() == TypeClass::SCALAR_TYPE) {
-        return std::any_of(((ScalarType *) type)->typeQualifierList.begin(), ((ScalarType *) type)->typeQualifierList.end(), [](const TypeQualifier &typeQualifier) {
+        return std::any_of(reinterpret_cast<ScalarType *>(type)->typeQualifierList.begin(), reinterpret_cast<ScalarType *>(type)->typeQualifierList.end(), [](const TypeQualifier &typeQualifier) {
             return typeQualifier == TypeQualifier::CONST;
         });
     }
     if (type->getClass() == TypeClass::POINTER_TYPE) {
-        return std::any_of(((PointerType *) type)->typeQualifierList.begin(), ((PointerType *) type)->typeQualifierList.end(), [](const TypeQualifier &typeQualifier) {
+        return std::any_of(reinterpret_cast<PointerType *>(type)->typeQualifierList.begin(), reinterpret_cast<PointerType *>(type)->typeQualifierList.end(), [](const TypeQualifier &typeQualifier) {
             return typeQualifier == TypeQualifier::CONST;
         });
     }
@@ -348,13 +348,13 @@ bool haveConstTypeQualifier(Type *type) {
 void ErrorCheckVisitor::visit(Declaration *declaration) {
     switch (declaration->getClass()) {
         case DeclarationClass::FUNCTION_DECLARATION:
-            visit((FunctionDeclaration *) declaration);
+            visit(reinterpret_cast<FunctionDeclaration *>(declaration));
             break;
         case DeclarationClass::FUNCTION_DEFINITION:
-            visit((FunctionDefinition *) declaration);
+            visit(reinterpret_cast<FunctionDefinition *>(declaration));
             break;
         case DeclarationClass::VARIABLE_DECLARATION:
-            visit((VariableDeclaration *) declaration);
+            visit(reinterpret_cast<VariableDeclaration *>(declaration));
             break;
     }
 }
@@ -362,34 +362,34 @@ void ErrorCheckVisitor::visit(Declaration *declaration) {
 void ErrorCheckVisitor::visit(Expression *expression) {
     switch (expression->getClass()) {
         case ExpressionClass::BINARY_EXPRESSION:
-            visit((BinaryExpression *) expression);
+            visit(reinterpret_cast<BinaryExpression *>(expression));
             break;
         case ExpressionClass::CALL_EXPRESSION:
-            visit((CallExpression *) expression);
+            visit(reinterpret_cast<CallExpression *>(expression));
             break;
         case ExpressionClass::CAST_EXPRESSION:
-            visit((CastExpression *) expression);
+            visit(reinterpret_cast<CastExpression *>(expression));
             break;
         case ExpressionClass::CHAR_LITERAL_EXPRESSION:
-            visit((CharacterLiteralExpression *) expression);
+            visit(reinterpret_cast<CharacterLiteralExpression *>(expression));
             break;
         case ExpressionClass::FLOAT_LITERAL_EXPRESSION:
-            visit((FloatingPointLiteralExpression *) expression);
+            visit(reinterpret_cast<FloatingPointLiteralExpression *>(expression));
             break;
         case ExpressionClass::IDENTIFIER_EXPRESSION:
-            visit((IdentifierExpression *) expression);
+            visit(reinterpret_cast<IdentifierExpression *>(expression));
             break;
         case ExpressionClass::INT_LITERAL_EXPRESSION:
-            visit((IntegerLiteralExpression *) expression);
+            visit(reinterpret_cast<IntegerLiteralExpression *>(expression));
             break;
         case ExpressionClass::STRING_LITERAL_EXPRESSION:
-            visit((StringLiteralExpression *) expression);
+            visit(reinterpret_cast<StringLiteralExpression *>(expression));
             break;
         case ExpressionClass::TERNARY_EXPRESSION:
-            visit((TernaryExpression *) expression);
+            visit(reinterpret_cast<TernaryExpression *>(expression));
             break;
         case ExpressionClass::UNARY_EXPRESSION:
-            visit((UnaryExpression *) expression);
+            visit(reinterpret_cast<UnaryExpression *>(expression));
             break;
     }
 }
@@ -397,49 +397,49 @@ void ErrorCheckVisitor::visit(Expression *expression) {
 void ErrorCheckVisitor::visit(Statement *statement) {
     switch (statement->getClass()) {
         case StatementClass::BREAK_STATEMENT:
-            visit((BreakStatement *) statement);
+            visit(reinterpret_cast<BreakStatement *>(statement));
             break;
         case StatementClass::CASE_STATEMENT:
-            visit((CaseStatement *) statement);
+            visit(reinterpret_cast<CaseStatement *>(statement));
             break;
         case StatementClass::COMPOUND_STATEMENT:
-            visit((CompoundStatement *) statement);
+            visit(reinterpret_cast<CompoundStatement *>(statement));
             break;
         case StatementClass::CONTINUE_STATEMENT:
-            visit((ContinueStatement *) statement);
+            visit(reinterpret_cast<ContinueStatement *>(statement));
             break;
         case StatementClass::DECLARATION_STATEMENT:
-            visit((DeclarationStatement *) statement);
+            visit(reinterpret_cast<DeclarationStatement *>(statement));
             break;
         case StatementClass::DEFAULT_STATEMENT:
-            visit((DefaultStatement *) statement);
+            visit(reinterpret_cast<DefaultStatement *>(statement));
             break;
         case StatementClass::DO_WHILE_STATEMENT:
-            visit((DoWhileStatement *) statement);
+            visit(reinterpret_cast<DoWhileStatement *>(statement));
             break;
         case StatementClass::EXPRESSION_STATEMENT:
-            visit((ExpressionStatement *) statement);
+            visit(reinterpret_cast<ExpressionStatement *>(statement));
             break;
         case StatementClass::FOR_STATEMENT:
-            visit((ForStatement *) statement);
+            visit(reinterpret_cast<ForStatement *>(statement));
             break;
         case StatementClass::GOTO_STATEMENT:
-            visit((GotoStatement *) statement);
+            visit(reinterpret_cast<GotoStatement *>(statement));
             break;
         case StatementClass::IF_STATEMENT:
-            visit((IfStatement *) statement);
+            visit(reinterpret_cast<IfStatement *>(statement));
             break;
         case StatementClass::LABEL_STATEMENT:
-            visit((LabelStatement *) statement);
+            visit(reinterpret_cast<LabelStatement *>(statement));
             break;
         case StatementClass::RETURN_STATEMENT:
-            visit((ReturnStatement *) statement);
+            visit(reinterpret_cast<ReturnStatement *>(statement));
             break;
         case StatementClass::SWITCH_STATEMENT:
-            visit((SwitchStatement *) statement);
+            visit(reinterpret_cast<SwitchStatement *>(statement));
             break;
         case StatementClass::WHILE_STATEMENT:
-            visit((WhileStatement *) statement);
+            visit(reinterpret_cast<WhileStatement *>(statement));
             break;
     }
 }
@@ -447,16 +447,16 @@ void ErrorCheckVisitor::visit(Statement *statement) {
 void ErrorCheckVisitor::visit(Type *type) {
     switch (type->getClass()) {
         case TypeClass::ARRAY_TYPE:
-            visit((ArrayType *) type);
+            visit(reinterpret_cast<ArrayType *>(type));
             break;
         case TypeClass::FUNCTION_TYPE:
-            visit((FunctionType *) type);
+            visit(reinterpret_cast<FunctionType *>(type));
             break;
         case TypeClass::POINTER_TYPE:
-            visit((PointerType *) type);
+            visit(reinterpret_cast<PointerType *>(type));
             break;
         case TypeClass::SCALAR_TYPE:
-            visit((ScalarType *) type);
+            visit(reinterpret_cast<ScalarType *>(type));
             break;
     }
 }
@@ -477,19 +477,19 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
                 return;
             }
             if (isArrayType(binaryExpression->leftOperand->resultType)) {
-                if (isVoidScalarType(((ArrayType *) binaryExpression->leftOperand->resultType)->elemType)) {
+                if (isVoidScalarType(reinterpret_cast<ArrayType *>(binaryExpression->leftOperand->resultType)->elemType)) {
                     ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the subscript operator can‘t be a void array");
                     return;
                 }
                 binaryExpression->isLvalue = true;
-                binaryExpression->resultType = ((ArrayType *) binaryExpression->leftOperand->resultType)->elemType->clone();
+                binaryExpression->resultType = reinterpret_cast<ArrayType *>(binaryExpression->leftOperand->resultType)->elemType->clone();
             } else if (isPointerType(binaryExpression->leftOperand->resultType)) {
-                if (isVoidScalarType(((PointerType *) binaryExpression->leftOperand->resultType)->sourceType)) {
+                if (isVoidScalarType(reinterpret_cast<PointerType *>(binaryExpression->leftOperand->resultType)->sourceType)) {
                     ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the subscript operator can‘t be a void pointer");
                     return;
                 }
                 binaryExpression->isLvalue = true;
-                binaryExpression->resultType = ((PointerType *) binaryExpression->leftOperand->resultType)->sourceType->clone();
+                binaryExpression->resultType = reinterpret_cast<PointerType *>(binaryExpression->leftOperand->resultType)->sourceType->clone();
             } else {
                 ErrorHandler::error(binaryExpression->lineNumber, binaryExpression->columnNumber, "the left operand of the subscript operator must be an array or a pointer");
                 return;
@@ -527,7 +527,7 @@ void ErrorCheckVisitor::visit(BinaryExpression *binaryExpression) {
             }
             Type *targetType = implicitCastTwoWay(binaryExpression->leftOperand->resultType, binaryExpression->rightOperand->resultType);
             if (targetType->getClass() == TypeClass::ARRAY_TYPE) {
-                binaryExpression->resultType = new PointerType(-1, -1, ((ArrayType *) targetType)->elemType->clone(), {});
+                binaryExpression->resultType = new PointerType(-1, -1, reinterpret_cast<ArrayType *>(targetType)->elemType->clone(), {});
             } else {
                 binaryExpression->resultType = targetType->clone();
             }
@@ -702,9 +702,9 @@ void ErrorCheckVisitor::visit(CallExpression *callExpression) {
     if (ErrorHandler::getStatus()) return;
     FunctionType *functionType;
     if (isFunctionType(callExpression->functionAddress->resultType)) {
-        functionType = (FunctionType *) callExpression->functionAddress->resultType;
-    } else if (isPointerType(callExpression->functionAddress->resultType) && isFunctionType(((PointerType *) callExpression->functionAddress->resultType)->sourceType)) {
-        functionType = (FunctionType *)((PointerType *)callExpression->functionAddress->resultType)->sourceType;
+        functionType = reinterpret_cast<FunctionType *>(callExpression->functionAddress->resultType);
+    } else if (isPointerType(callExpression->functionAddress->resultType) && isFunctionType(reinterpret_cast<PointerType *>(callExpression->functionAddress->resultType)->sourceType)) {
+        functionType = reinterpret_cast<FunctionType *>(reinterpret_cast<PointerType *>(callExpression->functionAddress->resultType)->sourceType);
     } else {
         ErrorHandler::error(callExpression->lineNumber, callExpression->columnNumber, "the left operand of the call operator must be a function");
         return;
@@ -754,23 +754,23 @@ void ErrorCheckVisitor::visit(IdentifierExpression *identifierExpression) {
     switch (symbol->getClass()) {
         case SymbolClass::SCALAR_SYMBOL:
             identifierExpression->isLvalue = true;
-            identifierExpression->resultType = ((ScalarSymbol *) symbol)->type->clone();
+            identifierExpression->resultType = reinterpret_cast<ScalarSymbol *>(symbol)->type->clone();
             break;
         case SymbolClass::POINTER_SYMBOL:
             identifierExpression->isLvalue = true;
-            identifierExpression->resultType = ((PointerSymbol *) symbol)->type->clone();
+            identifierExpression->resultType = reinterpret_cast<PointerSymbol *>(symbol)->type->clone();
             break;
         case SymbolClass::ARRAY_SYMBOL:
             identifierExpression->isLvalue = true;
-            identifierExpression->resultType = ((ArraySymbol *) symbol)->type->clone();
+            identifierExpression->resultType = reinterpret_cast<ArraySymbol *>(symbol)->type->clone();
             break;
         case SymbolClass::FUNCTION_SYMBOL:
             identifierExpression->isLvalue = true;
-            identifierExpression->resultType = ((FunctionSymbol *) symbol)->type->clone();
+            identifierExpression->resultType = reinterpret_cast<FunctionSymbol *>(symbol)->type->clone();
             break;
         case SymbolClass::STATEMENT_SYMBOL:
             identifierExpression->isLvalue = true;
-            identifierExpression->resultType = ((FunctionSymbol *) symbol)->type->clone();
+            identifierExpression->resultType = reinterpret_cast<FunctionSymbol *>(symbol)->type->clone();
             return;
     }
 }
@@ -869,19 +869,19 @@ void ErrorCheckVisitor::visit(UnaryExpression *unaryExpression) {
             break;
         case UnaryOperator::DEREFERENCE:
             if (isArrayType(unaryExpression->operand->resultType)) {
-                if (isVoidScalarType(((ArrayType *) unaryExpression->operand->resultType)->elemType)) {
+                if (isVoidScalarType(reinterpret_cast<ArrayType *>(unaryExpression->operand->resultType)->elemType)) {
                     ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the dereference operator can't be a void array");
                     return;
                 }
                 unaryExpression->isLvalue = true;
-                unaryExpression->resultType = ((ArrayType *) unaryExpression->operand->resultType)->elemType->clone();
+                unaryExpression->resultType = reinterpret_cast<ArrayType *>(unaryExpression->operand->resultType)->elemType->clone();
             } else if (isPointerType(unaryExpression->operand->resultType)) {
-                if (isVoidScalarType(((PointerType *) unaryExpression->operand->resultType)->sourceType)) {
+                if (isVoidScalarType(reinterpret_cast<PointerType *>(unaryExpression->operand->resultType)->sourceType)) {
                     ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the dereference operator can't be a void pointer");
                     return;
                 }
                 unaryExpression->isLvalue = true;
-                unaryExpression->resultType = ((PointerType *) unaryExpression->operand->resultType)->sourceType->clone();
+                unaryExpression->resultType = reinterpret_cast<PointerType *>(unaryExpression->operand->resultType)->sourceType->clone();
             } else {
                 ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the dereference operator must be a pointer or array");
                 return;
@@ -893,7 +893,7 @@ void ErrorCheckVisitor::visit(UnaryExpression *unaryExpression) {
                 ErrorHandler::error(unaryExpression->lineNumber, unaryExpression->columnNumber, "the operand of the plus or minus operator must be an integer scalar");
                 return;
             }
-            switch (((ScalarType *) unaryExpression->operand->resultType)->baseType) {
+            switch (reinterpret_cast<ScalarType *>(unaryExpression->operand->resultType)->baseType) {
                 case BaseType::VOID:
                     assert(false); // 前面检查过了
                 case BaseType::CHAR:
@@ -967,7 +967,7 @@ void ErrorCheckVisitor::visit(FunctionDeclaration *functionDeclaration) {
     if (ErrorHandler::getStatus()) return;
     undefinedFunctionSet.insert(functionDeclaration->identifier);
     if ((*symbolTableBuilder)[functionDeclaration->identifier] == nullptr) {
-        symbolTableBuilder->insertSymbol(new FunctionSymbol(functionDeclaration->identifier, (FunctionType *) functionDeclaration->functionType->clone()));
+        symbolTableBuilder->insertSymbol(new FunctionSymbol(functionDeclaration->identifier, reinterpret_cast<FunctionType *>(functionDeclaration->functionType->clone())));
     }
 }
 
@@ -977,7 +977,7 @@ void ErrorCheckVisitor::visit(FunctionDefinition *functionDefinition) {
         haveEntryFunction = true;
     }
     if ((*symbolTableBuilder)[functionDefinition->identifier] == nullptr) {
-        symbolTableBuilder->insertSymbol(new FunctionSymbol(functionDefinition->identifier, (FunctionType *) functionDefinition->functionType->clone()));
+        symbolTableBuilder->insertSymbol(new FunctionSymbol(functionDefinition->identifier, reinterpret_cast<FunctionType *>(functionDefinition->functionType->clone())));
     }
     symbolTableBuilder->createScope(functionDefinition->identifier);
     for (auto parameterDeclaration : functionDefinition->parameterDeclarationList) {
@@ -988,7 +988,7 @@ void ErrorCheckVisitor::visit(FunctionDefinition *functionDefinition) {
         visit(parameterDeclaration);
         if (ErrorHandler::getStatus()) return;
     }
-    currentFunctionType = (FunctionType *) functionDefinition->functionType;
+    currentFunctionType = reinterpret_cast<FunctionType *>(functionDefinition->functionType);
     visit(functionDefinition->body);
     if (ErrorHandler::getStatus()) return;
     currentFunctionType = nullptr;
@@ -1008,19 +1008,19 @@ void ErrorCheckVisitor::visit(VariableDeclaration *variableDeclaration) {
     }
     switch (variableDeclaration->variableType->getClass()) {
         case TypeClass::ARRAY_TYPE: {
-            if (isVoidScalarType(((ArrayType *) variableDeclaration->variableType)->elemType)) {
+            if (isVoidScalarType(reinterpret_cast<ArrayType *>(variableDeclaration->variableType)->elemType)) {
                 ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because the elem of the array can't be a void scalar");
                 return;
             }
-            if (((ArrayType *) variableDeclaration->variableType)->size < 1) {
+            if (reinterpret_cast<ArrayType *>(variableDeclaration->variableType)->size < 1) {
                 ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because the size of the array is invalid");
                 return;
             }
-            if (!variableDeclaration->initialValueList.empty() && ((ArrayType *) variableDeclaration->variableType)->size != variableDeclaration->initialValueList.size()) {
+            if (!variableDeclaration->initialValueList.empty() && reinterpret_cast<ArrayType *>(variableDeclaration->variableType)->size != variableDeclaration->initialValueList.size()) {
                 ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because the size of the array is not equal to the size of the initial value list");
                 return;
             }
-            symbolTableBuilder->insertSymbol(new ArraySymbol(variableDeclaration->identifier, (ArrayType *) variableDeclaration->variableType->clone()));
+            symbolTableBuilder->insertSymbol(new ArraySymbol(variableDeclaration->identifier, reinterpret_cast<ArrayType *>(variableDeclaration->variableType->clone())));
             break;
         }
         case TypeClass::SCALAR_TYPE: {
@@ -1032,7 +1032,7 @@ void ErrorCheckVisitor::visit(VariableDeclaration *variableDeclaration) {
                 ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because it has multiple initial values");
                 return;
             }
-            symbolTableBuilder->insertSymbol(new ScalarSymbol(variableDeclaration->identifier, (ScalarType *) variableDeclaration->variableType->clone()));
+            symbolTableBuilder->insertSymbol(new ScalarSymbol(variableDeclaration->identifier, reinterpret_cast<ScalarType *>(variableDeclaration->variableType->clone())));
             break;
         }
         case TypeClass::FUNCTION_TYPE:
@@ -1042,7 +1042,7 @@ void ErrorCheckVisitor::visit(VariableDeclaration *variableDeclaration) {
                 ErrorHandler::error(variableDeclaration->lineNumber, variableDeclaration->columnNumber, "invalid definition of `" + variableDeclaration->identifier + "` because it has multiple initial values");
                 return;
             }
-            symbolTableBuilder->insertSymbol(new PointerSymbol(variableDeclaration->identifier, (PointerType *) variableDeclaration->variableType->clone()));
+            symbolTableBuilder->insertSymbol(new PointerSymbol(variableDeclaration->identifier, reinterpret_cast<PointerType *>(variableDeclaration->variableType->clone())));
             break;
         }
     }
@@ -1228,13 +1228,13 @@ void ErrorCheckVisitor::visit(SwitchStatement *switchStatement) {
     }
     bool haveDefaultStatement = false;
     std::vector<std::int64_t> caseValueList;
-    for (auto statement : ((CompoundStatement *) switchStatement->body)->statementList) {
+    for (auto statement : reinterpret_cast<CompoundStatement *>(switchStatement->body)->statementList) {
         if (statement->getClass() == StatementClass::CASE_STATEMENT) {
-            if (std::find(caseValueList.begin(), caseValueList.end(), ((CaseStatement *) statement)->value) != caseValueList.end()) {
+            if (std::find(caseValueList.begin(), caseValueList.end(), reinterpret_cast<CaseStatement *>(statement)->value) != caseValueList.end()) {
                 ErrorHandler::error(switchStatement->lineNumber, switchStatement->columnNumber, "the body of the switch statement have repeated case statement");
                 return;
             }
-            caseValueList.push_back(((CaseStatement *) statement)->value);
+            caseValueList.push_back(reinterpret_cast<CaseStatement *>(statement)->value);
         } else if (statement->getClass() == StatementClass::DEFAULT_STATEMENT) {
             if (haveDefaultStatement) {
                 ErrorHandler::error(switchStatement->lineNumber, switchStatement->columnNumber, "the body of the switch statement have repeated case statement");
@@ -1270,7 +1270,7 @@ void ErrorCheckVisitor::visit(WhileStatement *whileStatement) {
 }
 
 void ErrorCheckVisitor::visit(TranslationUnit *translationUnit) {
-    BuiltInFunctionLibrary::insertSymbol(symbolTableBuilder);
+    BuiltInFunctionInserter::insertSymbol(symbolTableBuilder);
     for (auto declaration : translationUnit->declarationList) {
         visit(declaration);
         if (ErrorHandler::getStatus()) return;

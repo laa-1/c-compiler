@@ -3,11 +3,7 @@
 #include "Visitor.h"
 #include <string>
 
-/**
- * 用于打印AST的visitor具体子类。
- * 使用时应当只调用TranslationUnit的visit函数。
- * 不应该复用同一个对象。
- */
+
 class PrintVisitor : public Visitor {
 private:
     std::string retract; // 某个节点的缩进前缀

@@ -11,7 +11,11 @@ public:
     FunctionType *type = nullptr;
     std::uint64_t address = 0;
 
-    FunctionSymbol(const std::string &identifier, FunctionType *type);
+    FunctionSymbol(const std::string &identifier, FunctionType *type) : Symbol(identifier), type(type) {}
+
     ~FunctionSymbol() override = default;
-    SymbolClass getClass() override;
+
+    SymbolClass getClass() override {
+        return SymbolClass::FUNCTION_SYMBOL;
+    }
 };

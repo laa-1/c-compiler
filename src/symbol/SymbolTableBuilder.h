@@ -4,10 +4,6 @@
 #include <stack>
 #include "SymbolTable.h"
 
-/**
- * 用于构建SymbolTable的Builder类。
- * 封装了作用域的嵌套问题。
- */
 class SymbolTableBuilder {
 private:
     Scope *rootScope;

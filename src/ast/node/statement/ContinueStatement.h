@@ -4,7 +4,11 @@
 
 class ContinueStatement : public Statement {
 public:
-    ContinueStatement(int lineNumber, int columnNumber);
+    ContinueStatement(int lineNumber, int columnNumber) : Statement(lineNumber, columnNumber) {}
+
     ~ContinueStatement() override = default;
-    StatementClass getClass() override;
+
+    StatementClass getClass() override {
+        return StatementClass::CONTINUE_STATEMENT;
+    }
 };

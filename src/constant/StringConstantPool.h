@@ -3,9 +3,6 @@
 #include <map>
 #include "StringConstant.h"
 
-/**
- * 字符串常量池类。
- */
 class StringConstantPool {
 private:
     std::map<std::string, StringConstant *> map;
@@ -17,6 +14,6 @@ public:
     void add(const std::string &value);
     void calculateAddress(std::uint64_t start);
     std::vector<std::uint8_t> serialize();
-    std::uint64_t getStartAddress() const;
-    std::uint64_t getMemoryUse() const;
+    [[nodiscard]] std::uint64_t getStartAddress() const;
+    [[nodiscard]] std::uint64_t getMemoryUse() const;
 };

@@ -11,7 +11,11 @@ public:
     ArrayType *type = nullptr;
     std::uint64_t address = 0;
 
-    ArraySymbol(const std::string &identifier, ArrayType *type);
+    ArraySymbol(const std::string &identifier, ArrayType *type) : Symbol(identifier), type(type) {}
+
     ~ArraySymbol() override = default;
-    SymbolClass getClass() override;
+
+    SymbolClass getClass() override {
+        return SymbolClass::ARRAY_SYMBOL;
+    }
 };

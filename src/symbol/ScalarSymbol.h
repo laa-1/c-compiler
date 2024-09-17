@@ -11,7 +11,11 @@ public:
     ScalarType *type = nullptr;
     std::uint64_t address = 0;
 
-    ScalarSymbol(const std::string &identifier, ScalarType *type);
+    ScalarSymbol(const std::string &identifier, ScalarType *type) : Symbol(identifier), type(type) {}
+
     ~ScalarSymbol() override = default;
-    SymbolClass getClass() override;
+
+    SymbolClass getClass() override {
+        return SymbolClass::SCALAR_SYMBOL;
+    }
 };

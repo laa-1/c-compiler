@@ -35,9 +35,14 @@ enum class TypeClass {
 
 class Type : public Node {
 public:
-    Type(int lineNumber, int columnNumber);
+    Type(int lineNumber, int columnNumber) : Node(lineNumber, columnNumber) {}
+
     ~Type() override = default;
-    void accept(Visitor *visitor) override;
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+
     virtual TypeClass getClass() = 0;
     virtual Type *clone() = 0;
 };

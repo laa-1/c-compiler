@@ -24,8 +24,13 @@ enum class DeclarationClass {
 
 class Declaration : public Node {
 public:
-    Declaration(int lineNumber, int columnNumber);
+    Declaration(int lineNumber, int columnNumber) : Node(lineNumber, columnNumber) {}
+
     ~Declaration() override = default;
-    void accept(Visitor *visitor) override;
+
+    void accept(Visitor *visitor) override {
+        visitor->visit(this);
+    }
+
     virtual DeclarationClass getClass() = 0;
 };

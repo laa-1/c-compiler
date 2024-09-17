@@ -76,9 +76,6 @@ class WhileStatement;
 
 class TranslationUnit;
 
-/**
- * Visitor模式中的visitor的抽象基类
- */
 class Visitor {
 public:
     virtual ~Visitor() = default;

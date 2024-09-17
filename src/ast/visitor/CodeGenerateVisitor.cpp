@@ -43,12 +43,12 @@
 #include "../../symbol/PointerSymbol.h"
 #include "../../symbol/ScalarSymbol.h"
 #include "../../symbol/StatementSymbol.h"
-#include "../../builtin/BuiltInFunctionLibrary.h"
+#include "../../builtin/BuiltInFunctionInserter.h"
 
 int getTypeByteNum(Type *type) {
     switch (type->getClass()) {
         case TypeClass::SCALAR_TYPE:
-            switch (((ScalarType *) type)->baseType) {
+            switch (reinterpret_cast<ScalarType *>(type)->baseType) {
                 case BaseType::VOID:
                     assert(false);
                 case BaseType::CHAR:
@@ -79,7 +79,7 @@ int getTypeByteNum(Type *type) {
 BinaryDataType type2BinaryDataType(Type *type) {
     switch (type->getClass()) {
         case TypeClass::SCALAR_TYPE:
-            switch (((ScalarType *) type)->baseType) {
+            switch (reinterpret_cast<ScalarType *>(type)->baseType) {
                 case BaseType::VOID:
                     assert(false);
                 case BaseType::CHAR:
@@ -173,13 +173,13 @@ void CodeGenerateVisitor::patchContinuePushAddress(std::uint64_t realAddress) {
 void CodeGenerateVisitor::visit(Declaration *declaration) {
     switch (declaration->getClass()) {
         case DeclarationClass::FUNCTION_DECLARATION:
-            visit((FunctionDeclaration *) declaration);
+            visit(reinterpret_cast<FunctionDeclaration *>(declaration));
             break;
         case DeclarationClass::FUNCTION_DEFINITION:
-            visit((FunctionDefinition *) declaration);
+            visit(reinterpret_cast<FunctionDefinition *>(declaration));
             break;
         case DeclarationClass::VARIABLE_DECLARATION:
-            visit((VariableDeclaration *) declaration);
+            visit(reinterpret_cast<VariableDeclaration *>(declaration));
             break;
     }
 }
@@ -187,34 +187,34 @@ void CodeGenerateVisitor::visit(Declaration *declaration) {
 void CodeGenerateVisitor::visit(Expression *expression) {
     switch (expression->getClass()) {
         case ExpressionClass::BINARY_EXPRESSION:
-            visit((BinaryExpression *) expression);
+            visit(reinterpret_cast<BinaryExpression *>(expression));
             break;
         case ExpressionClass::CALL_EXPRESSION:
-            visit((CallExpression *) expression);
+            visit(reinterpret_cast<CallExpression *>(expression));
             break;
         case ExpressionClass::CAST_EXPRESSION:
-            visit((CastExpression *) expression);
+            visit(reinterpret_cast<CastExpression *>(expression));
             break;
         case ExpressionClass::CHAR_LITERAL_EXPRESSION:
-            visit((CharacterLiteralExpression *) expression);
+            visit(reinterpret_cast<CharacterLiteralExpression *>(expression));
             break;
         case ExpressionClass::FLOAT_LITERAL_EXPRESSION:
-            visit((FloatingPointLiteralExpression *) expression);
+            visit(reinterpret_cast<FloatingPointLiteralExpression *>(expression));
             break;
         case ExpressionClass::IDENTIFIER_EXPRESSION:
-            visit((IdentifierExpression *) expression);
+            visit(reinterpret_cast<IdentifierExpression *>(expression));
             break;
         case ExpressionClass::INT_LITERAL_EXPRESSION:
-            visit((IntegerLiteralExpression *) expression);
+            visit(reinterpret_cast<IntegerLiteralExpression *>(expression));
             break;
         case ExpressionClass::STRING_LITERAL_EXPRESSION:
-            visit((StringLiteralExpression *) expression);
+            visit(reinterpret_cast<StringLiteralExpression *>(expression));
             break;
         case ExpressionClass::TERNARY_EXPRESSION:
-            visit((TernaryExpression *) expression);
+            visit(reinterpret_cast<TernaryExpression *>(expression));
             break;
         case ExpressionClass::UNARY_EXPRESSION:
-            visit((UnaryExpression *) expression);
+            visit(reinterpret_cast<UnaryExpression *>(expression));
             break;
     }
 }
@@ -222,49 +222,49 @@ void CodeGenerateVisitor::visit(Expression *expression) {
 void CodeGenerateVisitor::visit(Statement *statement) {
     switch (statement->getClass()) {
         case StatementClass::BREAK_STATEMENT:
-            visit((BreakStatement *) statement);
+            visit(reinterpret_cast<BreakStatement *>(statement));
             break;
         case StatementClass::CASE_STATEMENT:
-            visit((CaseStatement *) statement);
+            visit(reinterpret_cast<CaseStatement *>(statement));
             break;
         case StatementClass::COMPOUND_STATEMENT:
-            visit((CompoundStatement *) statement);
+            visit(reinterpret_cast<CompoundStatement *>(statement));
             break;
         case StatementClass::CONTINUE_STATEMENT:
-            visit((ContinueStatement *) statement);
+            visit(reinterpret_cast<ContinueStatement *>(statement));
             break;
         case StatementClass::DECLARATION_STATEMENT:
-            visit((DeclarationStatement *) statement);
+            visit(reinterpret_cast<DeclarationStatement *>(statement));
             break;
         case StatementClass::DEFAULT_STATEMENT:
-            visit((DefaultStatement *) statement);
+            visit(reinterpret_cast<DefaultStatement *>(statement));
             break;
         case StatementClass::DO_WHILE_STATEMENT:
-            visit((DoWhileStatement *) statement);
+            visit(reinterpret_cast<DoWhileStatement *>(statement));
             break;
         case StatementClass::EXPRESSION_STATEMENT:
-            visit((ExpressionStatement *) statement);
+            visit(reinterpret_cast<ExpressionStatement *>(statement));
             break;
         case StatementClass::FOR_STATEMENT:
-            visit((ForStatement *) statement);
+            visit(reinterpret_cast<ForStatement *>(statement));
             break;
         case StatementClass::GOTO_STATEMENT:
-            visit((GotoStatement *) statement);
+            visit(reinterpret_cast<GotoStatement *>(statement));
             break;
         case StatementClass::IF_STATEMENT:
-            visit((IfStatement *) statement);
+            visit(reinterpret_cast<IfStatement *>(statement));
             break;
         case StatementClass::LABEL_STATEMENT:
-            visit((LabelStatement *) statement);
+            visit(reinterpret_cast<LabelStatement *>(statement));
             break;
         case StatementClass::RETURN_STATEMENT:
-            visit((ReturnStatement *) statement);
+            visit(reinterpret_cast<ReturnStatement *>(statement));
             break;
         case StatementClass::SWITCH_STATEMENT:
-            visit((SwitchStatement *) statement);
+            visit(reinterpret_cast<SwitchStatement *>(statement));
             break;
         case StatementClass::WHILE_STATEMENT:
-            visit((WhileStatement *) statement);
+            visit(reinterpret_cast<WhileStatement *>(statement));
             break;
     }
 }
@@ -272,16 +272,16 @@ void CodeGenerateVisitor::visit(Statement *statement) {
 void CodeGenerateVisitor::visit(Type *type) {
     switch (type->getClass()) {
         case TypeClass::ARRAY_TYPE:
-            visit((ArrayType *) type);
+            visit(reinterpret_cast<ArrayType *>(type));
             break;
         case TypeClass::FUNCTION_TYPE:
-            visit((FunctionType *) type);
+            visit(reinterpret_cast<FunctionType *>(type));
             break;
         case TypeClass::POINTER_TYPE:
-            visit((PointerType *) type);
+            visit(reinterpret_cast<PointerType *>(type));
             break;
         case TypeClass::SCALAR_TYPE:
-            visit((ScalarType *) type);
+            visit(reinterpret_cast<ScalarType *>(type));
             break;
     }
 }
@@ -330,7 +330,7 @@ void CodeGenerateVisitor::visit(BinaryExpression *binaryExpression) {
             visit(binaryExpression->leftOperand);
             if (binaryExpression->rightOperand->resultType->getClass() == TypeClass::POINTER_TYPE || binaryExpression->rightOperand->resultType->getClass() == TypeClass::ARRAY_TYPE) {
                 instructionSequenceBuilder->appendCast(rightBinaryDataType, BinaryDataType::U64);
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) binaryExpression->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(binaryExpression->resultType)->sourceType)));
                 instructionSequenceBuilder->appendMul(BinaryDataType::U64);
             } else {
                 instructionSequenceBuilder->appendCast(leftBinaryDataType, resultBinaryDataType);
@@ -339,7 +339,7 @@ void CodeGenerateVisitor::visit(BinaryExpression *binaryExpression) {
             visit(binaryExpression->rightOperand);
             if (binaryExpression->leftOperand->resultType->getClass() == TypeClass::POINTER_TYPE || binaryExpression->leftOperand->resultType->getClass() == TypeClass::ARRAY_TYPE) {
                 instructionSequenceBuilder->appendCast(rightBinaryDataType, BinaryDataType::U64);
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) binaryExpression->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(binaryExpression->resultType)->sourceType)));
                 instructionSequenceBuilder->appendMul(BinaryDataType::U64);
             } else {
                 instructionSequenceBuilder->appendCast(leftBinaryDataType, resultBinaryDataType);
@@ -351,7 +351,7 @@ void CodeGenerateVisitor::visit(BinaryExpression *binaryExpression) {
             visit(binaryExpression->leftOperand);
             if (binaryExpression->rightOperand->resultType->getClass() == TypeClass::POINTER_TYPE || binaryExpression->rightOperand->resultType->getClass() == TypeClass::ARRAY_TYPE) {
                 instructionSequenceBuilder->appendCast(rightBinaryDataType, BinaryDataType::U64);
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) binaryExpression->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(binaryExpression->resultType)->sourceType)));
                 instructionSequenceBuilder->appendMul(BinaryDataType::U64);
             } else {
                 instructionSequenceBuilder->appendCast(leftBinaryDataType, resultBinaryDataType);
@@ -360,7 +360,7 @@ void CodeGenerateVisitor::visit(BinaryExpression *binaryExpression) {
             visit(binaryExpression->rightOperand);
             if (binaryExpression->leftOperand->resultType->getClass() == TypeClass::POINTER_TYPE || binaryExpression->leftOperand->resultType->getClass() == TypeClass::ARRAY_TYPE) {
                 instructionSequenceBuilder->appendCast(rightBinaryDataType, BinaryDataType::U64);
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) binaryExpression->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(binaryExpression->resultType)->sourceType)));
                 instructionSequenceBuilder->appendMul(BinaryDataType::U64);
             } else {
                 instructionSequenceBuilder->appendCast(leftBinaryDataType, resultBinaryDataType);
@@ -550,7 +550,7 @@ void CodeGenerateVisitor::visit(BinaryExpression *binaryExpression) {
             visit(binaryExpression->rightOperand);
             if (binaryExpression->leftOperand->resultType->getClass() == TypeClass::POINTER_TYPE) {
                 instructionSequenceBuilder->appendCast(rightBinaryDataType, BinaryDataType::U64);
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) binaryExpression->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(binaryExpression->resultType)->sourceType)));
                 instructionSequenceBuilder->appendMul(BinaryDataType::U64);
             } else {
                 instructionSequenceBuilder->appendCast(leftBinaryDataType, resultBinaryDataType);
@@ -573,7 +573,7 @@ void CodeGenerateVisitor::visit(BinaryExpression *binaryExpression) {
             visit(binaryExpression->rightOperand);
             if (binaryExpression->leftOperand->resultType->getClass() == TypeClass::POINTER_TYPE) {
                 instructionSequenceBuilder->appendCast(rightBinaryDataType, BinaryDataType::U64);
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) binaryExpression->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(binaryExpression->resultType)->sourceType)));
                 instructionSequenceBuilder->appendMul(BinaryDataType::U64);
             } else {
                 instructionSequenceBuilder->appendCast(leftBinaryDataType, resultBinaryDataType);
@@ -698,9 +698,9 @@ void CodeGenerateVisitor::visit(BinaryExpression *binaryExpression) {
 void CodeGenerateVisitor::visit(CallExpression *callExpression) {
     FunctionType *functionType;
     if (callExpression->functionAddress->resultType->getClass() == TypeClass::FUNCTION_TYPE) {
-        functionType = (FunctionType *) callExpression->functionAddress->resultType;
+        functionType = reinterpret_cast<FunctionType *>(callExpression->functionAddress->resultType);
     } else {
-        functionType = (FunctionType *)((PointerType *)callExpression->functionAddress->resultType)->sourceType;
+        functionType = reinterpret_cast<FunctionType *>(reinterpret_cast<PointerType *>(callExpression->functionAddress->resultType)->sourceType);
     }
     for (int i = 0; i < functionType->parameterTypeList.size(); i++) {
         needLoadValue = true;
@@ -710,7 +710,7 @@ void CodeGenerateVisitor::visit(CallExpression *callExpression) {
     needLoadValue = true;
     visit(callExpression->functionAddress);
     instructionSequenceBuilder->appendCall();
-    if (functionType->returnType->getClass() == TypeClass::SCALAR_TYPE && ((ScalarType *) functionType->returnType)->baseType == BaseType::VOID) {
+    if (functionType->returnType->getClass() == TypeClass::SCALAR_TYPE && reinterpret_cast<ScalarType *>(functionType->returnType)->baseType == BaseType::VOID) {
         instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(0)); // 用于保证所有的表达式计算后都会在栈中压入一个结果，
     }
 }
@@ -733,43 +733,43 @@ void CodeGenerateVisitor::visit(IdentifierExpression *identifierExpression) {
     Symbol *symbol = (*symbolTableIterator)[identifierExpression->identifier];
     switch (symbol->getClass()) {
         case SymbolClass::SCALAR_SYMBOL:
-            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(((ScalarSymbol *) symbol)->address));
+            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(reinterpret_cast<ScalarSymbol *>(symbol)->address));
             if (!symbolTable->checkGlobal(identifierExpression->identifier)) {
                 instructionSequenceBuilder->appendFbp();
                 instructionSequenceBuilder->appendAdd(BinaryDataType::U64);
             }
             if (needLoadValue) {
-                instructionSequenceBuilder->appendLoad(type2BinaryDataType(((ScalarSymbol *) symbol)->type));
+                instructionSequenceBuilder->appendLoad(type2BinaryDataType(reinterpret_cast<ScalarSymbol *>(symbol)->type));
             }
             break;
         case SymbolClass::POINTER_SYMBOL:
-            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(((PointerSymbol *) symbol)->address));
+            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(reinterpret_cast<PointerSymbol *>(symbol)->address));
             if (!symbolTable->checkGlobal(identifierExpression->identifier)) {
                 instructionSequenceBuilder->appendFbp();
                 instructionSequenceBuilder->appendAdd(BinaryDataType::U64);
             }
             if (needLoadValue) {
-                instructionSequenceBuilder->appendLoad(type2BinaryDataType(((PointerSymbol *) symbol)->type));
+                instructionSequenceBuilder->appendLoad(type2BinaryDataType(reinterpret_cast<PointerSymbol *>(symbol)->type));
             }
             break;
         case SymbolClass::ARRAY_SYMBOL:
-            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(((ArraySymbol *) symbol)->address));
+            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(reinterpret_cast<ArraySymbol *>(symbol)->address));
             if (!symbolTable->checkGlobal(identifierExpression->identifier)) {
                 instructionSequenceBuilder->appendFbp();
                 instructionSequenceBuilder->appendAdd(BinaryDataType::U64);
             }
             break;
         case SymbolClass::FUNCTION_SYMBOL:
-            if (((FunctionSymbol *) symbol)->address == 0) {
+            if (reinterpret_cast<FunctionSymbol *>(symbol)->address == 0) {
                 functionPlaceholderIndexMap[identifierExpression->identifier].push_back(instructionSequenceBuilder->getNextInstructionIndex());
             }
-            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(((FunctionSymbol *) symbol)->address));
+            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(reinterpret_cast<FunctionSymbol *>(symbol)->address));
             break;
         case SymbolClass::STATEMENT_SYMBOL:
-            if (((StatementSymbol *) symbol)->address == 0) {
+            if (reinterpret_cast<StatementSymbol *>(symbol)->address == 0) {
                 statementPlaceholderIndexMap[identifierExpression->identifier].push_back(instructionSequenceBuilder->getNextInstructionIndex());
             }
-            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(((StatementSymbol *) symbol)->address));
+            instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(reinterpret_cast<StatementSymbol *>(symbol)->address));
             break;
     }
 }
@@ -822,7 +822,7 @@ void CodeGenerateVisitor::visit(UnaryExpression *unaryExpression) {
             instructionSequenceBuilder->appendCopy();
             instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
             if (unaryExpression->operand->resultType->getClass() == TypeClass::POINTER_TYPE) {
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) unaryExpression->operand->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(unaryExpression->operand->resultType)->sourceType)));
             } else {
                 switch (operandBinaryDataType) {
                     case BinaryDataType::I8:
@@ -858,7 +858,7 @@ void CodeGenerateVisitor::visit(UnaryExpression *unaryExpression) {
             instructionSequenceBuilder->appendCopy();
             instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
             if (unaryExpression->operand->resultType->getClass() == TypeClass::POINTER_TYPE) {
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) unaryExpression->operand->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(unaryExpression->operand->resultType)->sourceType)));
             } else {
                 switch (operandBinaryDataType) {
                     case BinaryDataType::I8:
@@ -896,7 +896,7 @@ void CodeGenerateVisitor::visit(UnaryExpression *unaryExpression) {
             instructionSequenceBuilder->appendCopy();
             instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
             if (unaryExpression->operand->resultType->getClass() == TypeClass::POINTER_TYPE) {
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) unaryExpression->operand->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(unaryExpression->operand->resultType)->sourceType)));
             } else {
                 switch (operandBinaryDataType) {
                     case BinaryDataType::I8:
@@ -931,7 +931,7 @@ void CodeGenerateVisitor::visit(UnaryExpression *unaryExpression) {
             instructionSequenceBuilder->appendCopy();
             instructionSequenceBuilder->appendLoad(type2BinaryDataType(unaryExpression->operand->resultType));
             if (unaryExpression->operand->resultType->getClass() == TypeClass::POINTER_TYPE) {
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(((PointerType *) unaryExpression->operand->resultType)->sourceType)));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(getTypeByteNum(reinterpret_cast<PointerType *>(unaryExpression->operand->resultType)->sourceType)));
             } else {
                 switch (operandBinaryDataType) {
                     case BinaryDataType::I8:
@@ -1015,32 +1015,32 @@ void CodeGenerateVisitor::visit(FunctionDefinition *functionDefinition) {
     if (functionPlaceholderIndexMap.contains(functionDefinition->identifier)) {
         patchFunctionPlaceholderAddress(functionDefinition->identifier, functionAddress);
     }
-    ((FunctionSymbol *) (*symbolTableIterator)[functionDefinition->identifier])->address = functionAddress;
+    reinterpret_cast<FunctionSymbol *>((*symbolTableIterator)[functionDefinition->identifier])->address = functionAddress;
     symbolTableIterator->switchScope();
-    for (int i = (int) ((FunctionType *) functionDefinition->functionType)->parameterTypeList.size() - 1; i >= 0; i--) {
-        switch (((FunctionType *) functionDefinition->functionType)->parameterTypeList[i]->getClass()) {
+    for (int i = static_cast<int>(reinterpret_cast<FunctionType *>(functionDefinition->functionType)->parameterTypeList.size()) - 1; i >= 0; i--) {
+        switch (reinterpret_cast<FunctionType *>(functionDefinition->functionType)->parameterTypeList[i]->getClass()) {
             case TypeClass::ARRAY_TYPE:
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(((ArraySymbol *) (*symbolTableIterator)[((VariableDeclaration *) functionDefinition->parameterDeclarationList[i])->identifier])->address));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(reinterpret_cast<ArraySymbol *>((*symbolTableIterator)[reinterpret_cast<VariableDeclaration *>(functionDefinition->parameterDeclarationList[i])->identifier])->address));
                 instructionSequenceBuilder->appendFbp();
                 instructionSequenceBuilder->appendAdd(BinaryDataType::U64);
                 instructionSequenceBuilder->appendSwap();
-                instructionSequenceBuilder->appendStore(type2BinaryDataType(((FunctionType *) functionDefinition->functionType)->parameterTypeList[i]));
+                instructionSequenceBuilder->appendStore(type2BinaryDataType(reinterpret_cast<FunctionType *>(functionDefinition->functionType)->parameterTypeList[i]));
                 break;
             case TypeClass::FUNCTION_TYPE:
                 assert(false);
             case TypeClass::POINTER_TYPE:
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(((PointerSymbol *) (*symbolTableIterator)[((VariableDeclaration *) functionDefinition->parameterDeclarationList[i])->identifier])->address));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(reinterpret_cast<PointerSymbol *>((*symbolTableIterator)[reinterpret_cast<VariableDeclaration *>(functionDefinition->parameterDeclarationList[i])->identifier])->address));
                 instructionSequenceBuilder->appendFbp();
                 instructionSequenceBuilder->appendAdd(BinaryDataType::U64);
                 instructionSequenceBuilder->appendSwap();
-                instructionSequenceBuilder->appendStore(type2BinaryDataType(((FunctionType *) functionDefinition->functionType)->parameterTypeList[i]));
+                instructionSequenceBuilder->appendStore(type2BinaryDataType(reinterpret_cast<FunctionType *>(functionDefinition->functionType)->parameterTypeList[i]));
                 break;
             case TypeClass::SCALAR_TYPE:
-                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(((ScalarSymbol *) (*symbolTableIterator)[((VariableDeclaration *) functionDefinition->parameterDeclarationList[i])->identifier])->address));
+                instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(reinterpret_cast<ScalarSymbol *>((*symbolTableIterator)[reinterpret_cast<VariableDeclaration *>(functionDefinition->parameterDeclarationList[i])->identifier])->address));
                 instructionSequenceBuilder->appendFbp();
                 instructionSequenceBuilder->appendAdd(BinaryDataType::U64);
                 instructionSequenceBuilder->appendSwap();
-                instructionSequenceBuilder->appendStore(type2BinaryDataType(((FunctionType *) functionDefinition->functionType)->parameterTypeList[i]));
+                instructionSequenceBuilder->appendStore(type2BinaryDataType(reinterpret_cast<FunctionType *>(functionDefinition->functionType)->parameterTypeList[i]));
                 break;
         }
     }
@@ -1054,13 +1054,13 @@ void CodeGenerateVisitor::visit(FunctionDefinition *functionDefinition) {
 void CodeGenerateVisitor::visit(VariableDeclaration *variableDeclaration) {
     switch (variableDeclaration->variableType->getClass()) {
         case TypeClass::ARRAY_TYPE: {
-            auto arraySymbol = (ArraySymbol *) (*symbolTableIterator)[variableDeclaration->identifier];
+            auto arraySymbol = reinterpret_cast<ArraySymbol *>((*symbolTableIterator)[variableDeclaration->identifier]);
             if (!variableDeclaration->initialValueList.empty()) {
                 for (int i = 0; i < variableDeclaration->initialValueList.size(); i++) {
                     instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(arraySymbol->address));
                     instructionSequenceBuilder->appendFbp();
                     instructionSequenceBuilder->appendAdd(BinaryDataType::U64);
-                    instructionSequenceBuilder->appendPush(getTypeByteNum(((ArrayType *) variableDeclaration->variableType)->elemType) * i);
+                    instructionSequenceBuilder->appendPush(getTypeByteNum(reinterpret_cast<ArrayType *>(variableDeclaration->variableType)->elemType) * i);
                     instructionSequenceBuilder->appendAdd(BinaryDataType::U64);
                     needLoadValue = true;
                     visit(variableDeclaration->initialValueList[i]);
@@ -1072,7 +1072,7 @@ void CodeGenerateVisitor::visit(VariableDeclaration *variableDeclaration) {
         case TypeClass::FUNCTION_TYPE:
             assert(false);
         case TypeClass::POINTER_TYPE: {
-            auto pointerSymbol = (PointerSymbol *) (*symbolTableIterator)[variableDeclaration->identifier];
+            auto pointerSymbol = reinterpret_cast<PointerSymbol *>((*symbolTableIterator)[variableDeclaration->identifier]);
             if (!variableDeclaration->initialValueList.empty()) {
                 instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(pointerSymbol->address));
                 instructionSequenceBuilder->appendFbp();
@@ -1084,7 +1084,7 @@ void CodeGenerateVisitor::visit(VariableDeclaration *variableDeclaration) {
             break;
         }
         case TypeClass::SCALAR_TYPE: {
-            auto scalarSymbol = (ScalarSymbol *) (*symbolTableIterator)[variableDeclaration->identifier];
+            auto scalarSymbol = reinterpret_cast<ScalarSymbol *>((*symbolTableIterator)[variableDeclaration->identifier]);
             if (!variableDeclaration->initialValueList.empty()) {
                 instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(scalarSymbol->address));
                 instructionSequenceBuilder->appendFbp();
@@ -1207,7 +1207,7 @@ void CodeGenerateVisitor::visit(ForStatement *forStatement) {
 }
 
 void CodeGenerateVisitor::visit(GotoStatement *gotoStatement) {
-    auto statementSymbol = (StatementSymbol *) (*symbolTableIterator)[gotoStatement->identifier];
+    auto statementSymbol = reinterpret_cast<StatementSymbol *>((*symbolTableIterator)[gotoStatement->identifier]);
     if (statementSymbol->address == 0) {
         statementPlaceholderIndexMap[gotoStatement->identifier].push_back(instructionSequenceBuilder->getNextInstructionIndex());
     }
@@ -1255,7 +1255,7 @@ void CodeGenerateVisitor::visit(SwitchStatement *switchStatement) {
     // switch语句的子语句必定是compound语句，且compound语句内必定是case或default语句
     needLoadValue = true;
     visit(switchStatement->expression);
-    std::vector<Statement *> caseStatementList = ((CompoundStatement *) switchStatement->body)->statementList;
+    std::vector<Statement *> caseStatementList = reinterpret_cast<CompoundStatement *>(switchStatement->body)->statementList;
     int defaultStatementIndex;
     // 找出default语句
     for (int i = 0; i < caseStatementList.size(); i++) {
@@ -1268,7 +1268,7 @@ void CodeGenerateVisitor::visit(SwitchStatement *switchStatement) {
     for (int i = 0; i < caseStatementList.size() - 1; i++) {
         if (caseStatementList[i]->getClass() == StatementClass::CASE_STATEMENT) {
             instructionSequenceBuilder->appendCopy();
-            instructionSequenceBuilder->appendPush(((CaseStatement *) caseStatementList[i])->value);
+            instructionSequenceBuilder->appendPush(reinterpret_cast<CaseStatement *>(caseStatementList[i])->value);
             instructionSequenceBuilder->appendCast(BinaryDataType::I64, type2BinaryDataType(switchStatement->expression->resultType));
             instructionSequenceBuilder->appendEq(type2BinaryDataType(switchStatement->expression->resultType));
             switchPushIndexList[i] = instructionSequenceBuilder->getNextInstructionIndex();
@@ -1327,7 +1327,7 @@ void CodeGenerateVisitor::visit(TranslationUnit *translationUnit) {
             instructionSequenceBuilder->appendPush(static_cast<std::uint64_t>(0)); // 占位地址
             instructionSequenceBuilder->appendCall();
             instructionSequenceBuilder->appendHlt();
-            BuiltInFunctionLibrary::insertCode(symbolTableIterator, instructionSequenceBuilder);
+            BuiltInFunctionInserter::insertCode(symbolTableIterator, instructionSequenceBuilder);
         }
         visit(declaration);
     }

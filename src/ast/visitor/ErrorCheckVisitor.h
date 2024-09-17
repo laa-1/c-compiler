@@ -6,12 +6,6 @@
 #include "../../constant/StringConstantPool.h"
 #include "../../symbol/SymbolTableBuilder.h"
 
-/**
- * 用于对AST进行错误检查的visitor具体子类。
- * 同时还会进行符号表的构建和字符串常量池的构建。
- * 使用时应当只调用TranslationUnit的visit函数。
- * 不应该复用同一个对象。
- */
 class ErrorCheckVisitor : public Visitor {
 private:
     std::unique_ptr<SymbolTableBuilder> symbolTableBuilder = std::make_unique<SymbolTableBuilder>();
